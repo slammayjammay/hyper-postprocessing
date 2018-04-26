@@ -102,7 +102,9 @@ exports.decorateTerm = (Term, { React }) => {
 			try {
 				required = window.require(CONFIG_OPTIONS.entry);
 				shaders = this._parseShadersFromConfig(required);
-			} catch (e) {}
+			} catch (e) {
+				console.warn(e);
+			}
 
 			if (!required ||!shaders) {
 				return;
@@ -153,7 +155,7 @@ exports.decorateTerm = (Term, { React }) => {
 			if (typeof config === 'string') {
 				return createPassFromFragmentString(config);
 			} else if (Array.isArray(config)) {
-				return config.map(item => this._parseInputConfig(item));
+				return config.map(item => this._parseShadersFromConfig(item));
 			} else if (typeof config === 'object') {
 				return createPassFromOptions(config);
 			}
@@ -218,6 +220,10 @@ exports.decorateTerm = (Term, { React }) => {
 		 * On tab switch, cancel/start the rendering loop
 		 */
 		componentWillReceiveProps(props) {
+			if (!this._isInit) {
+				return;
+			}
+
 			if (this.props.isTermActive && !props.isTermActive) {
 				this._cancelAnimationLoop();
 			} else if (!this.props.isTermActive && props.isTermActive) {
@@ -281,7 +287,9 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		componentWillUnmount() {
-			this.destroy();
+			if (this._isInit) {
+				this.destroy();
+			}
 		}
 
 		destroy() {
