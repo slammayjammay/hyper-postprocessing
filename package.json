@@ -4,7 +4,8 @@
   "description": "Add fragment shaders to the Hyper terminal.",
   "main": "dist/built.js",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "prepublish": "npm run build"
   },
   "keywords": [
     "hyper",
