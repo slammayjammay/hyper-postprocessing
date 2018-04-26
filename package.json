@@ -5,7 +5,7 @@
   "main": "dist/built.js",
   "scripts": {
     "build": "webpack",
-    "prepublish": "npm run build"
+    "prepare": "npm run build"
   },
   "keywords": [
     "hyper",
