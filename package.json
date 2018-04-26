@@ -1,0 +1,29 @@
+{
+  "name": "hyper-postprocessing",
+  "version": "1.0.0",
+  "description": "Add fragment shaders to the Hyper terminal.",
+  "main": "dist/built.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "keywords": [
+    "hyper",
+    "hyperterm",
+    "shader",
+    "fragment",
+    "xterm"
+  ],
+  "author": {
+    "name": "Scott McKenzie",
+    "email": "slammayjammay@gmail.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "webpack": "^4.6.0",
+    "webpack-cli": "^2.0.15"
+  },
+  "dependencies": {
+    "postprocessing": "^4.4.1",
+    "three": "^0.91.0"
+  }
+}
