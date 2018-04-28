@@ -58,7 +58,7 @@ module.exports = ({ ShaderPass, ShaderMaterial }) => {
   });
 
   // error! this function must return option 1, 2, or 3
-  return shaderPass;
+  return shaderMaterial;
 
   return { shaderMaterial }; // option 2
 
