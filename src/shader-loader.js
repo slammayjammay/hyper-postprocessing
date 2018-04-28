@@ -10,6 +10,10 @@ export const createPassFromOptions = (options) => {
 		return options.shaderPass;
 	}
 
-	const material = new ShaderMaterial(options);
+	const material = options.shaderMaterial || new ShaderMaterial(options);
 	return new ShaderPass(material);
+};
+
+export const createPassFromCallback = (callback) => {
+	return callback({ ShaderPass, ShaderMaterial });
 };

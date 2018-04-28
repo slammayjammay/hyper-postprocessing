@@ -18,12 +18,12 @@ export default class extends Pass {
 
 	setUniform(key, value) {
 		this.uniforms[key] = value;
+		this.material.uniforms[key].value = value;
 	}
 
 	render(renderer, readBuffer, writeBuffer, timeDelta) {
 		this.material.uniforms.tDiffuse.value = readBuffer.texture;
 		this.material.uniforms.timeDelta.value = timeDelta;
-		this.material.uniforms.aspect.value = this.uniforms.aspect;
 		this.material.uniforms.timeElapsed.value = this.uniforms.timeElapsed;
 
 		renderer.render(this.scene, this.camera, this.renderToScreen ? null : writeBuffer);

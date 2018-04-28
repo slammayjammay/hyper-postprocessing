@@ -29,11 +29,15 @@
 
 import { homedir } from 'os';
 import {
-	Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh,
+	Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Vector2,
 	MeshBasicMaterial, CanvasTexture, LinearFilter, Clock
 } from 'three';
 import { EffectComposer, RenderPass } from 'postprocessing';
-import { createPassFromFragmentString, createPassFromOptions } from './shader-loader';
+import {
+	createPassFromFragmentString,
+	createPassFromOptions,
+	createPassFromCallback
+} from './shader-loader';
 
 // read config from the `hyperPostprocessing` key in .hyper.js config
 // there is probably a better way of doing this using the middleware but idc
@@ -46,6 +50,8 @@ const CONFIG_DEFAULTS = {
 	//   2) an object with keys `fragmentShader` and `vertexShader` (vertex shader
 	//      is optional). if you want to use a custom Three.js ShaderPass, provide
 	//      one under the key `shaderPass`.
+	//   3) a callback, given the ShaderPass and ShaderMaterial classes as
+	//      arguments, expected to return a single or multiple "items"
 	entry: `${homedir()}/.hyper-postprocessing.js`
 
 	// TODO: possible option to not render the selection and link layer?
@@ -72,7 +78,6 @@ exports.decorateTerm = (Term, { React }) => {
 
 			this._isInit = false; // have we already initialized?
 			this._term = null; // IV for the argument passed in `onDecorated`
-			this._aspectRatio; // to pass into each shader
 			this._container = null; // container for the canvas we will inject
 			this._canvas = null; // the canvas we will inject
 			this._layers = {}; // holds XTerms rendered canvas, as well as the threejs Textures
@@ -97,7 +102,7 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 		}
 
-		async _init() {
+		_init() {
 			let required, shaders;
 			try {
 				required = window.require(CONFIG_OPTIONS.entry);
@@ -106,7 +111,7 @@ exports.decorateTerm = (Term, { React }) => {
 				console.warn(e);
 			}
 
-			if (!required ||!shaders) {
+			if (!required || !shaders) {
 				return;
 			}
 
@@ -139,9 +144,16 @@ exports.decorateTerm = (Term, { React }) => {
 
 			// i dont think there's a need to remove this listener later -- hyper takes care of it
 			this._term.term.on('resize', () => {
-				const { canvasWidth, canvasHeight } = this._term.term.renderer.dimensions;
+				const {
+					canvasWidth, canvasHeight, scaledCanvasWidth, scaledCanvasHeight
+				} = this._term.term.renderer.dimensions;
+
 				this._renderer.setSize(canvasWidth, canvasHeight);
-				this._aspectRatio = canvasWidth / canvasHeight;
+
+				this._setUniforms({
+					aspect: canvasWidth / canvasHeight,
+					resolution: new Vector2(scaledCanvasWidth, scaledCanvasHeight)
+				});
 			});
 
 			const that = this;
@@ -152,6 +164,12 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_parseShadersFromConfig(config) {
+			// if config is a function, call it passing in the ShaderPass and
+			// ShaderMaterial classes. we still need to parse the return value
+			if (typeof config === 'function') {
+				config = createPassFromCallback(config);
+			}
+
 			if (typeof config === 'string') {
 				return createPassFromFragmentString(config);
 			} else if (Array.isArray(config)) {
@@ -231,6 +249,15 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 		}
 
+		_setUniforms(obj) {
+			const defaultPasses = this.passes.filter(pass => pass.name === 'DefaultShaderPass');
+
+			Object.keys(obj).forEach(uniform => {
+				const value = obj[uniform];
+				defaultPasses.forEach(pass => pass.setUniform(uniform, value));
+			});
+		}
+
 		_startAnimationLoop() {
 			const materials = Object.values(this._layers).map(({ material }) => material);
 			const defaultPasses = this.passes.filter(pass => pass.name === 'DefaultShaderPass');
@@ -243,7 +270,6 @@ exports.decorateTerm = (Term, { React }) => {
 
 				for (let i = 0, length = defaultPasses.length; i < length; i++) {
 					defaultPasses[i].setUniform('timeElapsed', that._clock.getElapsedTime());
-					defaultPasses[i].setUniform('aspect', that._aspectRatio);
 				}
 
 				for (let i = 0, length = materials.length; i < length; i++) {
@@ -300,7 +326,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 			this._isInit = false;
 			this._term = this._container = this._canvas = null;
-			this._layers = null;
+			this._layers = this.passes = null;
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null;
 		}
 	}
