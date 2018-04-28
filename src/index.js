@@ -137,9 +137,6 @@ exports.decorateTerm = (Term, { React }) => {
 				...(Array.isArray(shaders) ? shaders : [shaders])
 			];
 			this.passes[this.passes.length - 1].renderToScreen = true;
-
-			// assign each pass an instance of a Three.js Clock
-			// (to be safe, only on instances of "./ShaderPass")
 			this.passes.forEach(pass => this._composer.addPass(pass));
 
 			// i dont think there's a need to remove this listener later -- hyper takes care of it
@@ -148,7 +145,7 @@ exports.decorateTerm = (Term, { React }) => {
 					canvasWidth, canvasHeight, scaledCanvasWidth, scaledCanvasHeight
 				} = this._term.term.renderer.dimensions;
 
-				this._renderer.setSize(canvasWidth, canvasHeight);
+				this._composer.setSize(canvasWidth, canvasHeight);
 
 				this._setUniforms({
 					aspect: canvasWidth / canvasHeight,
