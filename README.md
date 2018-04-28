@@ -1,13 +1,16 @@
 # `hyper-postprocessing`
-> Add postprocessing filters to the Hyper terminal window
 
-# About
-A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fragment shaders to the terminal window. [Hyper v2](https://zeit.co/blog/hyper2) trashed the old [hterm](https://chromium.googlesource.com/apps/libapps/+/master/hterm) DOM-based rendering system and transitioned to the [xterm](https://github.com/xtermjs/xterm.js/) canvas-based system. This makes it much easier to add filter effects to the terminal window.
+A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fragment shaders to the terminal window. [Hyper v2](https://zeit.co/blog/hyper2) trashed the old [hterm](https://chromium.googlesource.com/apps/libapps/+/master/hterm) DOM-based rendering system and transitioned to the [xterm](https://github.com/xtermjs/xterm.js/) canvas-based system, which makes it much easier to add [`postprocessing`](https://github.com/vanruesc/postprocessing) effects to the terminal window.
 
-I thought it would be neat to add some effects to Hyper similar to those in [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
+Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
+
+<img width="500" src="./demos/glitch.gif"/>
+
+<img width="500" src="./demos/underwater.gif"/>
+
 
 # Performance
-- _needs improvement_
+- Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum.
 
 # How to setup
 In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugins. Then to specify options for this plugin, add a key `hyperPostprocessing` inside the `config` entry:
@@ -27,17 +30,52 @@ module.exports = {
 }
 ```
 The entry file should export the shader(s) you want to add to your terminal window. It can be:
-1. A string representing a fragment shader
-2. An object with keys `fragmentShader` and `vertexShader` (vertex shader is optional)
-3. An array of strings or objects
+1. Option 1: a string, assumed to be a fragment shader.
+2. Option 2: an object specifying `vertexShader`, `fragmentShader`, `shaderPass`, and/or `shaderMaterial`. If `shaderPass` is present, the value is assumed to be an instance of a `ShaderPass` that will be added to directly to `EffectComposer`. If `shaderMaterial` is present, the value is assumed to be an instance of a `ShaderMaterial` and will be paired with a `ShaderPass` that will be passed to `EffectComposer`. Providing `vertexShader` is optional.
+3. Option 3: an array of options 1 or 2.
+4. Option 4: a function that returns either option 1 or 2 or 3.
 
-In the case the object has the key `shaderPass`, it will assume the value points to a valid instance of a THREE.js ShaderPass and the `fragmentShader` and `vertexShader` keys will be ignored.
+For more complex shaders, you can build on a (slightly tweaked) `ShaderPass` or `ShaderMaterial` from `postprocessing`. Let's say you want to load another image as a texture and add it as a uniform to `ShaderMaterial`.
+```js
+/* path-to-entry-file.js */
+
+const { TextureLoader } = require('three');
+
+// export option 4
+module.exports = ({ ShaderPass, ShaderMaterial }) => {
+  const shaderMaterialOptions = {
+    uniforms: {
+      // if constructing from the provided ShaderMaterial, the fragment shader
+      // will have access to the default uniforms as well
+      imageTexture: { value: null }
+    },
+    fragmentShader: '...a valid fragment shader string...'
+  };
+  const shaderMaterial = new ShaderMaterial(shaderMaterialOptions);
+
+  new TextureLoader().load('path/to/image/', texture => {
+    shaderMaterial.uniforms.imageTexture.value = texture;
+  });
+
+  // error! this function must return option 1, 2, or 3
+  return shaderPass;
+
+  return { shaderMaterial }; // option 2
+
+  // option 3, containing options 1 or 2
+  return [
+    'a fragment shader',
+    { shaderPass: new ShaderPass(shaderMaterial) }
+  ];
+};
+```
 
 # Uniforms
 Vertex and fragment shaders have access to several uniforms:
-1. `tDiffuse` -- the image to sample
-2. `aspect` -- the aspect ratio of the screen
-3. `timeElapsed` -- the amount of time that has passed since the initial render
-4. `timeDelta` -- the amount of time that has passed since the last render of this terminal
+* `sampler2D tDiffuse` -- the xterm terminal to sample
+* `float aspect` -- the aspect ratio of the screen
+* `vec2 resolution` -- the image width and height in pixels
+* `float timeElapsed` -- the amount of time that has passed since the initial render
+* `float timeDelta` -- the amount of time that has passed since the last render of this terminal
 
-Note: if you export a custom shader you will have to implement these uniforms yourself.
+Note: if you export a custom shader material that is not an instance of the provided `ShaderMaterial`, the material's fragment shader will not have access to these uniforms.

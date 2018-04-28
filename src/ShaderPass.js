@@ -28,4 +28,4 @@ export default class extends Pass {
 
 		renderer.render(this.scene, this.camera, this.renderToScreen ? null : writeBuffer);
 	}
-};
+}

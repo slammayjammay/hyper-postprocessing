@@ -44,4 +44,4 @@ export default class extends ShaderMaterial {
 		options.uniforms = uniforms;
 		super(options);
 	}
-};
+}
