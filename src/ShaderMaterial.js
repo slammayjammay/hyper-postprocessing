@@ -33,6 +33,7 @@ const DEFAULTS = {
 		resolution: { value: null },
 		aspect: { value: null },
 		timeElapsed: { value: null },
+		keyPressTimeElapsed: { value: null },
 		timeDelta: { value: null }
 	}
 };

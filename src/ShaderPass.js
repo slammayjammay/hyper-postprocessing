@@ -25,6 +25,7 @@ export default class extends Pass {
 		this.material.uniforms.tDiffuse.value = readBuffer.texture;
 		this.material.uniforms.timeDelta.value = timeDelta;
 		this.material.uniforms.timeElapsed.value = this.uniforms.timeElapsed;
+		this.material.uniforms.keyPressTimeElapsed.value = this.uniforms.keyPressTimeElapsed;
 
 		renderer.render(this.scene, this.camera, this.renderToScreen ? null : writeBuffer);
 	}
