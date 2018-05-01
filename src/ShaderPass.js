@@ -21,6 +21,11 @@ export default class extends Pass {
 		this.material.uniforms[key].value = value;
 	}
 
+	/**
+	 * Sets the default uniforms and renders. Only the uniforms that will change
+	 * each frame will be set here. Uniforms that do not change each frame can
+	 * be set calling `setUniform`.
+	 */
 	render(renderer, readBuffer, writeBuffer, timeDelta) {
 		this.material.uniforms.tDiffuse.value = readBuffer.texture;
 		this.material.uniforms.timeDelta.value = timeDelta;

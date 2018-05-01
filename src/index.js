@@ -164,7 +164,10 @@ exports.decorateTerm = (Term, { React }) => {
 			// if config is a function, call it passing in the ShaderPass and
 			// ShaderMaterial classes. we still need to parse the return value
 			if (typeof config === 'function') {
-				config = createPassFromCallback(config);
+				config = createPassFromCallback(
+					config,
+					{ hyperTerm: this._term, xTerm: this._term.term }
+				);
 			}
 
 			if (typeof config === 'string') {

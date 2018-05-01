@@ -14,6 +14,6 @@ export const createPassFromOptions = (options) => {
 	return new ShaderPass(material);
 };
 
-export const createPassFromCallback = (callback) => {
-	return callback({ ShaderPass, ShaderMaterial });
+export const createPassFromCallback = (callback, { hyperTerm, xTerm }) => {
+	return callback({ ShaderPass, ShaderMaterial, hyperTerm, xTerm });
 };
