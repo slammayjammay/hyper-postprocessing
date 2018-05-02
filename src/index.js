@@ -83,6 +83,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._layers = {}; // holds XTerms rendered canvas, as well as the threejs Textures
 			this.passes = []; // all of the shader passes for effectcomposer
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null; // threejs + postprocessing stuff
+			this._lastKeyPress = null;
 		}
 
 		_onDecorated(term) {
@@ -130,6 +131,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 			Object.values(this._layers).forEach(({ el }) => el.style.opacity = 0);
 			this._clock = new Clock({ autoStart: false});
+			this._lastKeyPress = new Clock(true);
 			this._setupScene();
 
 			this.passes = [
@@ -158,6 +160,10 @@ exports.decorateTerm = (Term, { React }) => {
 				that._term.term.off('resize', resizeOnce);
 				that._startAnimationLoop();
 			});
+
+			this._term.term.on('keypress', ()=>{
+				this._lastKeyPress = new Clock(true);
+			})
 		}
 
 		_parseShadersFromConfig(config) {
@@ -270,6 +276,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 				for (let i = 0, length = defaultPasses.length; i < length; i++) {
 					defaultPasses[i].setUniform('timeElapsed', that._clock.getElapsedTime());
+					defaultPasses[i].setUniform('keyPressTimeElapsed', that._lastKeyPress.getElapsedTime());
 				}
 
 				for (let i = 0, length = materials.length; i < length; i++) {
