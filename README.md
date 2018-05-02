@@ -42,7 +42,7 @@ For more complex shaders, you can build on a (slightly tweaked) `ShaderPass` or 
 const { TextureLoader } = require('three');
 
 // export option 4
-module.exports = ({ ShaderPass, ShaderMaterial }) => {
+module.exports = ({ ShaderPass, ShaderMaterial, hyperTerm, xTerm }) => {
   const shaderMaterialOptions = {
     uniforms: {
       // if constructing from the provided ShaderMaterial, the fragment shader
@@ -79,3 +79,43 @@ Vertex and fragment shaders have access to several uniforms:
 * `float timeDelta` -- the amount of time that has passed since the last render of this terminal
 
 Note: if you export a custom shader material that is not an instance of the provided `ShaderMaterial`, the material's fragment shader will not have access to these uniforms.
+
+## Custom Uniforms
+If you want to set additional uniforms, you can extend and return an instance of `ShaderPass`. For example if you wanted to set an opacity uniform (poor example but for demonstrative purposes):
+```js
+/* path-to-entry-file.js */
+
+module.exports = ({ ShaderPass, ShaderMaterial, hyperTerm, xTerm }) => {
+  const fragmentShader = `
+  uniform sampler2D tDiffuse;
+  uniform float myOpacityUniform;
+  varying vec2 vUv;
+
+  void main() {
+    vec4 color = texture2D(tDiffuse, vUv);
+    color *= myOpacityUniform;
+    gl_FragColor = color;
+  }
+  `;
+
+  class CustomShaderPass extends ShaderPass {
+    render(renderer, readBuffer, writeBuffer, timeDelta) {
+      // set any custom uniforms here -- important to go before the `super` call
+      this.material.uniforms.myOpacityUniform.value = 0.3;
+
+      super.render(...arguments);
+    }
+  }
+
+  const shaderMaterial = new ShaderMaterial({
+    fragmentShader,
+    uniforms: {
+      myOpacityUniform: { value: null }
+    }
+  });
+
+  const customShaderPass = new CustomShaderPass(shaderMaterial);
+
+  return { shaderPass: customShaderPass };
+};
+```
