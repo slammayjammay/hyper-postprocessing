@@ -8,6 +8,8 @@ Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90
 
 <img width="500" src="./demos/underwater.gif"/>
 
+<img width="500" src="./demos/film.gif"/>
+
 
 # Performance
 - Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum.
