@@ -115,6 +115,10 @@ exports.decorateTerm = (Term, { React }) => {
 				return;
 			}
 
+			if (Array.isArray(shaders) && shaders.length === 0) {
+				return;
+			}
+
 			this._container = this._term.termRef;
 			this._xTermScreen = this._container.querySelector('.xterm .xterm-screen');
 
