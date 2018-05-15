@@ -96,7 +96,6 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 
 			if (!this._isInit) {
-				this._isInit = true;
 				this._term = term;
 				this._init();
 			}
@@ -115,9 +114,7 @@ exports.decorateTerm = (Term, { React }) => {
 				return;
 			}
 
-			if (Array.isArray(shaders) && shaders.length === 0) {
-				return;
-			}
+			this._isInit = true;
 
 			this._container = this._term.termRef;
 			this._xTermScreen = this._container.querySelector('.xterm .xterm-screen');
@@ -174,10 +171,17 @@ exports.decorateTerm = (Term, { React }) => {
 				);
 			}
 
+			if (!config) {
+				return null;
+			}
+
 			if (typeof config === 'string') {
 				return createPassFromFragmentString(config);
 			} else if (Array.isArray(config)) {
-				return config.map(item => this._parseShadersFromConfig(item));
+				const shaders = config
+					.map(item => this._parseShadersFromConfig(item))
+					.filter(item => !!item);
+				return (shaders.length === 0) ? null : shaders;
 			} else if (typeof config === 'object') {
 				return createPassFromOptions(config);
 			}

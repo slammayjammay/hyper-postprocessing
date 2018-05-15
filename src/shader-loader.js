@@ -10,8 +10,15 @@ export const createPassFromOptions = (options) => {
 		return options.shaderPass;
 	}
 
-	const material = options.shaderMaterial || new ShaderMaterial(options);
-	return new ShaderPass(material);
+	if (options.shaderMaterial) {
+		return new ShaderPass(options.shaderMaterial);
+	}
+
+	if (options.vertexShader || options.fragmentShader) {
+		return new ShaderPass(new ShaderMaterial(options));
+	}
+
+	return null;
 };
 
 export const createPassFromCallback = (callback, { hyperTerm, xTerm }) => {
