@@ -78,6 +78,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 			this._isInit = false; // have we already initialized?
 			this._term = null; // IV for the argument passed in `onDecorated`
+			this._xTermScreen = null; // xterm's container for render layers
 			this._container = null; // container for the canvas we will inject
 			this._canvas = null; // the canvas we will inject
 			this._layers = {}; // holds XTerms rendered canvas, as well as the threejs Textures
@@ -317,6 +318,8 @@ exports.decorateTerm = (Term, { React }) => {
 			const affectedLayer = this._layers[removedCanvas.classList.toString()];
 			const newTexture = new CanvasTexture(addedCanvas);
 			newTexture.minFilter = LinearFilter;
+
+			affectedLayer.material.map.dispose();
 			affectedLayer.material.map = newTexture;
 		}
 
@@ -329,12 +332,27 @@ exports.decorateTerm = (Term, { React }) => {
 		destroy() {
 			this._cancelAnimationLoop();
 
-			this._canvas && this._canvas.remove();
-			this._composer && this._composer.dispose();
+			while (this._scene.children.length > 0) {
+				const mesh = this._scene.children[0];
+				this._scene.remove(mesh);
+
+				mesh.material.map.dispose();
+				mesh.material.dispose();
+				mesh.geometry.dispose();
+			}
+
+			this._layerObserver.disconnect();
+			this._canvas.remove();
+			this._composer.dispose();
+
+			this._renderer.dispose();
+			this._renderer.forceContextLoss();
+			this._renderer.context = null;
+			this._renderer.domElement = null;
 
 			this._isInit = false;
-			this._term = this._container = this._canvas = null;
-			this._layers = this.passes = null;
+			this._term = this._container = this._xTermScreen = this._canvas = null;
+			this._layerObserver = this._layers = this.passes = null;
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null;
 		}
 	}
