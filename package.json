@@ -1,6 +1,6 @@
 {
   "name": "hyper-postprocessing",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Add fragment shaders to the Hyper terminal.",
   "main": "dist/built.js",
   "scripts": {
