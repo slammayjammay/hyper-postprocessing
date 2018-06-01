@@ -4,14 +4,13 @@ A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fra
 
 Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
-<img width="500" src="./demos/glitch.gif"/>
+![Example of glitch effect](https://user-images.githubusercontent.com/11801881/40855038-1dce9a88-6588-11e8-9f3a-ec552faf0631.gif)
 
-<img width="500" src="./demos/underwater.gif"/>
+![Example of underwater effect](https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif)
 
-<img width="500" src="./demos/film.gif"/>
+![Example of retro film effect](https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif)
 
-<img width="500" src="./demos/fallout-boy.gif"/>
-
+![Example of blending effect](https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif)
 
 # Performance
 - Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum.
