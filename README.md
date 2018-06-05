@@ -5,26 +5,31 @@ A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fra
 Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
 ## Examples
-| ![Glitch][1] |
+| ![Space travel][1] |
+|:---:|
+| A killer [space shader](https://www.shadertoy.com/view/XlfGRj) made by **Kali**. [Source](examples/space-travel/) |
+
+| ![Glitch][2] |
 |:---:|
 | Glitchy effect, one of the effects provided by [`postprocessing`](https://github.com/vanruesc/postprocessing). [Source](examples/glitch/) |
 
-| ![Underwater][2] |
+| ![Underwater][3] |
 |:---:|
 | Underwatery effect, using a [shader](https://www.shadertoy.com/view/4slGRM) made by **bitek**. [Source](examples/underwater/) |
 
-| ![Film][3] |
+| ![Film][4] |
 |:---:|
 | Retro filmy effect, using a [shader](https://www.shadertoy.com/view/Md3SRM) made by **manoloide**. [Source](examples/film/) |
 
-| ![Blend][4] |
+| ![Blend][5] |
 |:---:|
 | Example of [blending](http://mrdoob.github.io/webgl-blendfunctions/blendfunc.html) an image and text. [Source](examples/fallout-boy/) |
 
-[1]: https://user-images.githubusercontent.com/11801881/40855038-1dce9a88-6588-11e8-9f3a-ec552faf0631.gif
-[2]: https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif
-[3]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
-[4]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
+[1]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
+[2]: https://user-images.githubusercontent.com/11801881/40855038-1dce9a88-6588-11e8-9f3a-ec552faf0631.gif
+[3]: https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif
+[4]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
+[5]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
 
 ## Performance
 Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum. Tools like [glslify](https://github.com/glslify/glslify) can help achieve this.

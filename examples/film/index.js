@@ -17,8 +17,7 @@ module.exports = ({ ShaderMaterial }) => {
 		vec4 bg = texture2D(backgroundTexture, vUv);
 
 		vec3 blended = bg.rgb * bg.a + fg.rgb * fg.a * (1.0 - bg.a);
-
-		gl_FragColor = color;
+		gl_FragColor = vec4(blended, 1.0);
 	}
 	`;
 
