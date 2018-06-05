@@ -4,18 +4,32 @@ A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fra
 
 Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
-![Example of glitch effect](https://user-images.githubusercontent.com/11801881/40855038-1dce9a88-6588-11e8-9f3a-ec552faf0631.gif)
+## Examples
+| ![Glitch][1] |
+|:---:|
+| Glitchy effect, one of the effects provided by [`postprocessing`](https://github.com/vanruesc/postprocessing). [Source](examples/glitch/) |
 
-![Example of underwater effect](https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif)
+| ![Underwater][2] |
+|:---:|
+| Underwatery effect, using a [shader](https://www.shadertoy.com/view/4slGRM) made by **bitek**. [Source](examples/underwater/) |
 
-![Example of retro film effect](https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif)
+| ![Film][3] |
+|:---:|
+| Retro filmy effect, using a [shader](https://www.shadertoy.com/view/Md3SRM) made by **manoloide**. [Source](examples/film/) |
 
-![Example of blending effect](https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif)
+| ![Blend][4] |
+|:---:|
+| Example of [blending](http://mrdoob.github.io/webgl-blendfunctions/blendfunc.html) an image and text. [Source](examples/fallout-boy/) |
 
-# Performance
-- Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum.
+[1]: https://user-images.githubusercontent.com/11801881/40855038-1dce9a88-6588-11e8-9f3a-ec552faf0631.gif
+[2]: https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif
+[3]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
+[4]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
 
-# How to setup
+## Performance
+Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum. Tools like [glslify](https://github.com/glslify/glslify) can help achieve this.
+
+## How to setup
 In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugins. Then to specify options for this plugin, add a key `hyperPostprocessing` inside the `config` entry:
 ```js
 module.exports = {
@@ -34,7 +48,7 @@ module.exports = {
 ```
 The entry file should export the shader(s) you want to add to your terminal window. It can be:
 1. Option 1: a string, assumed to be a fragment shader.
-2. Option 2: an object specifying `vertexShader`, `fragmentShader`, `shaderPass`, and/or `shaderMaterial`. If `shaderPass` is present, the value is assumed to be an instance of a `ShaderPass` that will be added to directly to `EffectComposer`. If `shaderMaterial` is present, the value is assumed to be an instance of a `ShaderMaterial` and will be paired with a `ShaderPass` that will be passed to `EffectComposer`. Providing `vertexShader` is optional.
+2. Option 2: an object specifying `vertexShader`, `fragmentShader`, `shaderPass`, and/or `shaderMaterial`. If `shaderPass` is present, the value is assumed to be an instance of a `ShaderPass` that will be added directly to `EffectComposer`. If `shaderMaterial` is present, the value is assumed to be an instance of a `ShaderMaterial` and will be paired with a `ShaderPass` that will be passed to `EffectComposer`. Providing `vertexShader` is optional.
 3. Option 3: an array of options 1 or 2.
 4. Option 4: a function that returns either option 1 or 2 or 3.
 
@@ -73,9 +87,9 @@ module.exports = ({ ShaderPass, ShaderMaterial, hyperTerm, xTerm }) => {
 };
 ```
 
-# Uniforms
+## Uniforms
 Vertex and fragment shaders have access to several uniforms:
-* `sampler2D tDiffuse` -- the xterm terminal to sample
+* `sampler2D tDiffuse` -- the xterm terminal image
 * `float aspect` -- the aspect ratio of the screen
 * `vec2 resolution` -- the image width and height in pixels
 * `float timeElapsed` -- the amount of time that has passed since the initial render
