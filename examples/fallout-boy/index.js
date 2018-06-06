@@ -50,7 +50,5 @@ module.exports = ({ ShaderMaterial }) => {
 		shaderMaterial.uniforms.backgroundTexture.value = texture;
 	});
 
-	return [
-		{ shaderMaterial: shaderMaterial }
-	];
+	return { shaderMaterial };
 };

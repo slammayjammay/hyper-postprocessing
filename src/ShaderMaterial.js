@@ -2,6 +2,7 @@ import { ShaderMaterial } from 'three';
 
 const vertexShader = `
 uniform sampler2D tDiffuse;
+uniform vec2 resolution;
 uniform float aspect;
 uniform float timeElapsed;
 uniform float timeDelta;
@@ -15,6 +16,7 @@ void main() {
 
 const fragmentShader = `
 uniform sampler2D tDiffuse;
+uniform vec2 resolution;
 uniform float aspect;
 uniform float timeElapsed;
 uniform float timeDelta;

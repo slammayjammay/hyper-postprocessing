@@ -1,18 +1,8 @@
 /**
- * This plugin attempts to make it easy to add fragment shaders to XTerm's
- * terminal. In your `.hyper.js` config file, add this plugin
- * ("hyper-postprocessing") to the `plugins` array. Then, inside the `config`
- * object, add a key `hyperPostprocessing` that points to an array. This will
- * be the config used for this plugin. For more info on the available config
- * options, see CONFIG_DEFAULTS below.
+ * We can set up a Three.js scene, use the XTerm screen as an image texture, and
+ * add fragment shaders using the "postprocessing" npm package.
  *
- * Hyper v2 moves away from the HTerm rendering system (which uses the DOM) to
- * XTerm (which renders on a canvas). In addition to the performance benefits of
- * this, it also means it's way easier to add shader effects to the Hyper
- * terminal. We can set up a Three.js scene, use the XTerm canvas as an image
- * texture, and add fragment shaders using the "postprocessing" npm package.
- *
- * XTerm actually inserts 4 canvases into the DOM:
+ * XTerm inserts 4 canvases into the DOM:
  *   1) one to render any text output
  *   2) one to render the background for any selected text done with the mouse
  *   3) one to render any clickable links to webpages
@@ -20,11 +10,11 @@
  *
  * So we must apply any shader effects to all of these layers.
  *
- * One big, BIG downside: it's possible that mouse events do not visually sync
- * with outputted text. I haven't looked into the magic XTerm uses to add a
- * selection background when clicking with the mouse, but whatever it is, it
- * will be either impossible or really really difficult to make it work with
- * any fragment shaders.
+ * One big downside: it's possible that mouse events do not visually sync with
+ * outputted text. I haven't looked into the magic XTerm uses to add a selection
+ * background when clicking with the mouse, but whatever it is, it will be either
+ * impossible or really really difficult to make it work with arbitrary fragment
+ * shaders.
  */
 
 import { homedir } from 'os';
@@ -43,21 +33,12 @@ import {
 // there is probably a better way of doing this using the middleware but idc
 let CONFIG_OPTIONS = null;
 const CONFIG_DEFAULTS = {
-	// this plugin will require a javascript file that exports a single or
-	// multiple shader pass "items". by default it looks in
-	// "{{HOME}}/.hyper-postprocessing.js". each "item" can be one of 2 things:
-	//   1) a string assumed to be a fragment shader (vertex shader is optional)
-	//   2) an object with keys `fragmentShader` and `vertexShader` (vertex shader
-	//      is optional). if you want to use a custom Three.js ShaderPass, provide
-	//      one under the key `shaderPass`.
-	//   3) a callback, given the ShaderPass and ShaderMaterial classes as
-	//      arguments, expected to return a single or multiple "items"
 	entry: `${homedir()}/.hyper-postprocessing.js`
 
 	// TODO: possible option to not render the selection and link layer?
 };
 
-exports.middleware = ({ getState, dispatch }) => next => action => {
+exports.middleware = () => next => action => {
 	switch (action.type) {
 		case 'CONFIG_LOAD':
 		case 'CONFIG_RELOAD':
@@ -120,7 +101,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._container = this._term.termRef;
 			this._xTermScreen = this._container.querySelector('.xterm .xterm-screen');
 
-			// initialize this._layers["someClassList"] to an object holding an element
+			// initialize this._layers["someClassList"] to an object holding an element.
 			// later we will also set the "material" key on this object
 			this._xTermScreen.querySelectorAll('canvas').forEach(el => {
 				this._layers[el.classList.toString()] = { el };
@@ -191,7 +172,7 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		/**
-		 * Boilerplate for threejs
+		 * Boilerplate for threejs.
 		 */
 		_setupScene() {
 			const { canvasWidth, canvasHeight } = this._term.term.renderer.dimensions;
@@ -244,7 +225,7 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		/**
-		 * On tab switch, cancel/start the rendering loop
+		 * On tab switch, cancel/start the rendering loop.
 		 */
 		componentWillReceiveProps(props) {
 			if (!this._isInit) {
@@ -360,7 +341,7 @@ exports.decorateTerm = (Term, { React }) => {
 	return PostProcessing;
 };
 
-// css
+// CSS to position the our canvas correctly
 exports.decorateConfig = (config) => {
 	return Object.assign({}, config, {
 		css: `
