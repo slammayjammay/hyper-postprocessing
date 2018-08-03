@@ -67,12 +67,6 @@ exports.middleware = store => next => action => {
 	next(action);
 };
 
-exports.mapHyperDispatch = (dispatch, map) => ({
-	postprocessLoaded: () =>
-		dispatch({type: 'HYPER_POSTPROCESS_LOADED', time: loadTime}),
-	...map,
-})
-
 const addPass = pass => {
 	if (PASSES && PASSES.length) {
 		PASSES[PASSES.length-1].renderToScreen = false;
@@ -101,7 +95,7 @@ exports.decorateTerm = (Term, { React }, passedConfig) => {
 			PASSES = this.passes;
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null; // threejs + postprocessing stuff
 
-			this.props.postprocessLoaded();
+			window.store.dispatch({type: 'HYPER_POSTPROCESS_LOADED', time: loadTime});
 		}
 
 		_onDecorated(term) {
@@ -110,7 +104,7 @@ exports.decorateTerm = (Term, { React }, passedConfig) => {
 				this.props.onDecorated(term);
 			}
 
-			if (!term || !PASSED_IN_CONFIG || !CONFIG_OPTIONS.entry) {
+			if (!term || (!PASSED_IN_CONFIG && !CONFIG_OPTIONS.entry)) {
 				return;
 			}
 
