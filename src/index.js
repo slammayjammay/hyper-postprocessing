@@ -38,18 +38,46 @@ const CONFIG_DEFAULTS = {
 	// TODO: possible option to not render the selection and link layer?
 };
 
-exports.middleware = () => next => action => {
+const loadTime = new Date().getTime();
+let IS_ACTIVE = true;
+let PASSED_IN_CONFIG;
+let PASSES;
+let COMPOSER;
+
+exports.middleware = store => next => action => {
 	switch (action.type) {
 		case 'CONFIG_LOAD':
 		case 'CONFIG_RELOAD':
 			const config = action.config.hyperPostprocessing || {};
 			CONFIG_OPTIONS = Object.assign({}, CONFIG_DEFAULTS, config);
+			break;
+		case 'HYPER_POSTPROCESS_LOADED':
+			if (action.time < loadTime) {
+				IS_ACTIVE = false;
+				store.dispatch({type: 'HYPER_POSTPROCESS_SHADER', shader: PASSED_IN_CONFIG});
+			}
+			break;
+		case 'HYPER_POSTPROCESS_SHADER':
+			if (IS_ACTIVE) {
+				addPass(action.shader);
+			}
+			break;
 	}
 
 	next(action);
 };
 
-exports.decorateTerm = (Term, { React }) => {
+const addPass = pass => {
+	if (PASSES && PASSES.length) {
+		PASSES[PASSES.length-1].renderToScreen = false;
+	}
+	pass.renderToScreen = true;
+	PASSES.push(pass);
+	COMPOSER && COMPOSER.addPass(pass);
+}
+
+exports.decorateTerm = (Term, { React }, passedConfig) => {
+	PASSED_IN_CONFIG = passedConfig;
 	class PostProcessing extends React.Component {
 		constructor(...args) {
 			super(...args);
@@ -64,7 +92,10 @@ exports.decorateTerm = (Term, { React }) => {
 			this._canvas = null; // the canvas we will inject
 			this._layers = {}; // holds XTerms rendered canvas, as well as the threejs Textures
 			this.passes = []; // all of the shader passes for effectcomposer
+			PASSES = this.passes;
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null; // threejs + postprocessing stuff
+
+			window.store.dispatch({type: 'HYPER_POSTPROCESS_LOADED', time: loadTime});
 		}
 
 		_onDecorated(term) {
@@ -73,26 +104,30 @@ exports.decorateTerm = (Term, { React }) => {
 				this.props.onDecorated(term);
 			}
 
-			if (!term || !CONFIG_OPTIONS.entry) {
+			if (!term || (!PASSED_IN_CONFIG && !CONFIG_OPTIONS.entry)) {
 				return;
 			}
 
-			if (!this._isInit) {
+			if (!this._isInit && IS_ACTIVE) {
 				this._term = term;
 				this._init();
 			}
 		}
 
 		_init() {
-			let required, shaders;
+			let config, shaders;
 			try {
-				required = window.require(CONFIG_OPTIONS.entry);
-				shaders = this._parseShadersFromConfig(required);
+				if (PASSED_IN_CONFIG) {
+					config = PASSED_IN_CONFIG;
+				} else {
+					config = window.require(CONFIG_OPTIONS.entry);
+				}
+				shaders = this._parseShadersFromConfig(config);
 			} catch (e) {
 				console.warn(e);
 			}
 
-			if (!required || !shaders) {
+			if (!config || !shaders) {
 				return;
 			}
 
@@ -119,6 +154,7 @@ exports.decorateTerm = (Term, { React }) => {
 				new RenderPass(this._scene, this._camera),
 				...(Array.isArray(shaders) ? shaders : [shaders])
 			];
+			PASSES = this.passes;
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
 
@@ -198,6 +234,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 			// composer!
 			this._composer = new EffectComposer(this._renderer);
+			COMPOSER = this._composer;
 
 			// create a texture and mesh for each of XTerm's canvases
 			Object.values(this._layers).forEach((layerObj, idx) => {
@@ -228,7 +265,7 @@ exports.decorateTerm = (Term, { React }) => {
 		 * On tab switch, cancel/start the rendering loop.
 		 */
 		componentWillReceiveProps(props) {
-			if (!this._isInit) {
+			if (!this._isInit || !IS_ACTIVE) {
 				return;
 			}
 
@@ -267,6 +304,10 @@ exports.decorateTerm = (Term, { React }) => {
 				}
 
 				that._composer.render(that._clock.getDelta());
+
+				if (!IS_ACTIVE) {
+					this.destroy();
+				}
 			})();
 		}
 
