@@ -1,4 +1,4 @@
-import { ShaderPass, EffectPass, Effect } from 'postprocessing';
+import { EffectPass, Effect } from 'postprocessing';
 
 let hyperTerm, xTerm;
 
