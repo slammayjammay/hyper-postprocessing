@@ -22,12 +22,8 @@ import {
 	Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Vector2,
 	MeshBasicMaterial, CanvasTexture, LinearFilter, Clock
 } from 'three';
-import { EffectComposer, RenderPass } from 'postprocessing';
-import {
-	createPassFromFragmentString,
-	createPassFromOptions,
-	createPassFromCallback
-} from './shader-loader';
+import { EffectComposer, RenderPass, ShaderPass } from 'postprocessing';
+import loadConfig from './load-config';
 
 // read config from the `hyperPostprocessing` key in .hyper.js config
 // there is probably a better way of doing this using the middleware but idc
@@ -63,8 +59,10 @@ exports.decorateTerm = (Term, { React }) => {
 			this._container = null; // container for the canvas we will inject
 			this._canvas = null; // the canvas we will inject
 			this._layers = {}; // holds XTerms rendered canvas, as well as the threejs Textures
-			this.passes = []; // all of the shader passes for effectcomposer
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null; // threejs + postprocessing stuff
+
+			this.passes = []; // all of the passes for EffectComposer
+			this._shaderPasses = []; // a subset of this.passes that are all ShaderPasses (no EffectPasses)
 		}
 
 		_onDecorated(term) {
@@ -84,15 +82,12 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_init() {
-			let required, shaders;
-			try {
-				required = window.require(CONFIG_OPTIONS.entry);
-				shaders = this._parseShadersFromConfig(required);
-			} catch (e) {
-				console.warn(e);
-			}
+			const passes = loadConfig(CONFIG_OPTIONS.entry, {
+				hyperTerm: this._term,
+				xTerm: this._term.term
+			});
 
-			if (!required || !shaders) {
+			if (!passes || passes.length === 0) {
 				return;
 			}
 
@@ -111,16 +106,16 @@ exports.decorateTerm = (Term, { React }) => {
 			this._layerObserver = new MutationObserver(this._onCanvasReplacement);
 			this._layerObserver.observe(this._xTermScreen, { childList: true });
 
+			// hide all xterm canvases
 			Object.values(this._layers).forEach(({ el }) => el.style.opacity = 0);
 			this._clock = new Clock({ autoStart: false});
 			this._setupScene();
 
-			this.passes = [
-				new RenderPass(this._scene, this._camera),
-				...(Array.isArray(shaders) ? shaders : [shaders])
-			];
+			// store all our passes
+			this.passes = [new RenderPass(this._scene, this._camera), ...passes];
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
+			this._shaderPasses = this.passes.filter(pass => pass instanceof ShaderPass);
 
 			// i dont think there's a need to remove this listener later -- hyper takes care of it
 			this._term.term.on('resize', () => {
@@ -139,36 +134,9 @@ exports.decorateTerm = (Term, { React }) => {
 			const that = this;
 			this._term.term.on('resize', function resizeOnce() {
 				that._term.term.off('resize', resizeOnce);
+				that._clock.start();
 				that._startAnimationLoop();
 			});
-		}
-
-		_parseShadersFromConfig(config) {
-			// if config is a function, call it passing in the ShaderPass and
-			// ShaderMaterial classes. we still need to parse the return value
-			if (typeof config === 'function') {
-				config = createPassFromCallback(
-					config,
-					{ hyperTerm: this._term, xTerm: this._term.term }
-				);
-			}
-
-			if (!config) {
-				return null;
-			}
-
-			if (typeof config === 'string') {
-				return createPassFromFragmentString(config);
-			} else if (Array.isArray(config)) {
-				const shaders = config
-					.map(item => this._parseShadersFromConfig(item))
-					.filter(item => !!item);
-				return (shaders.length === 0) ? null : shaders;
-			} else if (typeof config === 'object') {
-				return createPassFromOptions(config);
-			}
-
-			return null;
 		}
 
 		/**
@@ -239,30 +207,45 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 		}
 
+		/**
+		 * Sets the given uniforms on all instances of ShaderPasses.
+		 *
+		 * @param {object} obj - A map with uniform strings as keys and their value
+		 * as values.
+		 */
 		_setUniforms(obj) {
-			const defaultPasses = this.passes.filter(pass => pass.name === 'DefaultShaderPass');
+			for (const uniformKey of Object.keys(obj)) {
+				const value = obj[uniformKey];
 
-			Object.keys(obj).forEach(uniform => {
-				const value = obj[uniform];
-				defaultPasses.forEach(pass => pass.setUniform(uniform, value));
-			});
+				for (const pass of this._shaderPasses) {
+					const material = pass.getFullscreenMaterial();
+
+					if (material.uniforms[uniformKey] !== undefined) {
+						material.uniforms[uniformKey].value = value;
+					}
+				}
+			}
 		}
 
 		_startAnimationLoop() {
 			const materials = Object.values(this._layers).map(({ material }) => material);
-			const defaultPasses = this.passes.filter(pass => pass.name === 'DefaultShaderPass');
-			this._clock.start();
+			const materialsWithTimeUniform = this._shaderPasses.filter(pass => {
+				return pass.getFullscreenMaterial().uniforms.time !== undefined;
+			});
+
+			const materialsLength = materials.length;
+			const materialsWithTimeUniformLength = materialsWithTimeUniform.length;
 
 			const that = this;
 
 			(function render() {
 				that._animationId = window.requestAnimationFrame(render);
 
-				for (let i = 0, length = defaultPasses.length; i < length; i++) {
-					defaultPasses[i].setUniform('timeElapsed', that._clock.getElapsedTime());
+				for (let i = 0; i < materialsWithTimeUniformLength; i++) {
+					materialsWithTimeUniform[i].uniforms.time.value = that._clock.getElapsedTime();
 				}
 
-				for (let i = 0, length = materials.length; i < length; i++) {
+				for (let i = 0; i < materialsLength; i++) {
 					materials[i].map.needsUpdate = true;
 				}
 
@@ -272,7 +255,6 @@ exports.decorateTerm = (Term, { React }) => {
 
 		_cancelAnimationLoop() {
 			window.cancelAnimationFrame(this._animationId);
-			this._clock.stop();
 		}
 
 		render() {
@@ -312,6 +294,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 		destroy() {
 			this._cancelAnimationLoop();
+			this._clock.stop();
 
 			while (this._scene.children.length > 0) {
 				const mesh = this._scene.children[0];
