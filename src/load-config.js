@@ -5,6 +5,10 @@ let hyperTerm, xTerm;
 /**
  * Tries to load from the config path, then parses the export and returns an
  * array of shader passes.
+ *
+ * @param {String} configPath - Absolute file path to the config file.
+ * @param {Object} object - Contains additional data that will be passed along
+ * to the exported function.
  */
 export default (configPath, object) => {
 	let config;

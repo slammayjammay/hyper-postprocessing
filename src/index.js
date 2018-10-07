@@ -10,11 +10,8 @@
  *
  * So we must apply any shader effects to all of these layers.
  *
- * One big downside: it's possible that mouse events do not visually sync with
- * outputted text. I haven't looked into the magic XTerm uses to add a selection
- * background when clicking with the mouse, but whatever it is, it will be either
- * impossible or really really difficult to make it work with arbitrary fragment
- * shaders.
+ * Downside: any terminal contents that are re-positioned by shaders will be out
+ * of sync with xTerm's text selection.
  */
 
 import { homedir } from 'os';
@@ -46,7 +43,7 @@ exports.middleware = () => next => action => {
 };
 
 exports.decorateTerm = (Term, { React }) => {
-	class PostProcessing extends React.Component {
+	class HyperPostProcessing extends React.Component {
 		constructor(...args) {
 			super(...args);
 
@@ -56,29 +53,26 @@ exports.decorateTerm = (Term, { React }) => {
 			this._isInit = false; // have we already initialized?
 			this._term = null; // IV for the argument passed in `onDecorated`
 			this._xTermScreen = null; // xterm's container for render layers
+			this._xTermLayerMap = new Map(); // map for each render layer and the material we will create
 			this._container = null; // container for the canvas we will inject
 			this._canvas = null; // the canvas we will inject
-			this._layers = {}; // holds XTerms rendered canvas, as well as the threejs Textures
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null; // threejs + postprocessing stuff
 
 			this.passes = []; // all of the passes for EffectComposer
-			this._shaderPasses = []; // a subset of this.passes that are all ShaderPasses (no EffectPasses)
+			this._shaderPasses = []; // a subset of passes that are all ShaderPasses (no EffectPasses)
 		}
 
 		_onDecorated(term) {
-			// according to Hyper docs, this is needed to continue the "chain flow"
 			if (this.props.onDecorated) {
 				this.props.onDecorated(term);
 			}
 
-			if (!term || !CONFIG_OPTIONS.entry) {
+			if (!term || !CONFIG_OPTIONS.entry || this._isInit) {
 				return;
 			}
 
-			if (!this._isInit) {
-				this._term = term;
-				this._init();
-			}
+			this._term = term;
+			this._init();
 		}
 
 		_init() {
@@ -96,20 +90,13 @@ exports.decorateTerm = (Term, { React }) => {
 			this._container = this._term.termRef;
 			this._xTermScreen = this._container.querySelector('.xterm .xterm-screen');
 
-			// initialize this._layers["someClassList"] to an object holding an element.
-			// later we will also set the "material" key on this object
-			this._xTermScreen.querySelectorAll('canvas').forEach(el => {
-				this._layers[el.classList.toString()] = { el };
-			});
+			const renderLayers = this._xTermScreen.querySelectorAll('canvas');
+			for (const canvas of renderLayers) {
+				canvas.style.opacity = 0;
+			}
 
-			// listen for any changes that happen inside XTerm's screen
-			this._layerObserver = new MutationObserver(this._onCanvasReplacement);
-			this._layerObserver.observe(this._xTermScreen, { childList: true });
-
-			// hide all xterm canvases
-			Object.values(this._layers).forEach(({ el }) => el.style.opacity = 0);
+			this._setupScene(renderLayers);
 			this._clock = new Clock({ autoStart: false});
-			this._setupScene();
 
 			// store all our passes
 			this.passes = [new RenderPass(this._scene, this._camera), ...passes];
@@ -117,7 +104,12 @@ exports.decorateTerm = (Term, { React }) => {
 			this.passes.forEach(pass => this._composer.addPass(pass));
 			this._shaderPasses = this.passes.filter(pass => pass instanceof ShaderPass);
 
-			// i dont think there's a need to remove this listener later -- hyper takes care of it
+			// listen for any changes that happen inside XTerm's screen
+			this._layerObserver = new MutationObserver(this._onCanvasReplacement);
+			this._layerObserver.observe(this._xTermScreen, { childList: true });
+
+			// set our canvas size and begin rendering
+			// i don't think there's a need to remove this listener
 			this._term.term.on('resize', () => {
 				const {
 					canvasWidth, canvasHeight, scaledCanvasWidth, scaledCanvasHeight
@@ -141,8 +133,11 @@ exports.decorateTerm = (Term, { React }) => {
 
 		/**
 		 * Boilerplate for threejs.
+		 *
+		 * @param {Iterable} renderLayers - The list of xTerm's render layers we
+		 * will use to create textures out of.
 		 */
-		_setupScene() {
+		_setupScene(renderLayers) {
 			const { canvasWidth, canvasHeight } = this._term.term.renderer.dimensions;
 
 			this._canvas = document.createElement('canvas');
@@ -163,13 +158,13 @@ exports.decorateTerm = (Term, { React }) => {
 			// camera!
 			const [w, h] = [canvasWidth / 2, canvasHeight / 2];
 			this._camera = new OrthographicCamera(-w, w, h, -h, 1, 1000);
+			this._camera.position.z = 1;
 
 			// composer!
 			this._composer = new EffectComposer(this._renderer);
 
-			// create a texture and mesh for each of XTerm's canvases
-			Object.values(this._layers).forEach((layerObj, idx) => {
-				const canvas = layerObj.el;
+			// xTerm textures!
+			for (const canvas of renderLayers) {
 				const texture = new CanvasTexture(canvas);
 				texture.minFilter = LinearFilter;
 
@@ -180,13 +175,10 @@ exports.decorateTerm = (Term, { React }) => {
 					transparent: true
 				});
 				const mesh = new Mesh(geometry, material);
-				mesh.position.z = idx;
-
-				layerObj.material = material;
 
 				this._scene.add(mesh);
-				this._camera.position.z += 1;
-			});
+				this._xTermLayerMap.set(canvas, material);
+			}
 
 			// add the element to the page
 			this._container.append(this._renderer.domElement);
@@ -210,7 +202,7 @@ exports.decorateTerm = (Term, { React }) => {
 		/**
 		 * Sets the given uniforms on all instances of ShaderPasses.
 		 *
-		 * @param {object} obj - A map with uniform strings as keys and their value
+		 * @param {Object} obj - A map with uniform strings as keys and their value
 		 * as values.
 		 */
 		_setUniforms(obj) {
@@ -227,26 +219,33 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 		}
 
+		/**
+		 * Begins the rendering loop, as well as sets time uniforms on passes that
+		 * contain them, and sets the `needsUpdate` flag on all of our xTerm
+		 * materials.
+		 */
 		_startAnimationLoop() {
-			const materials = Object.values(this._layers).map(({ material }) => material);
-			const materialsWithTimeUniform = this._shaderPasses.filter(pass => {
+			const xTermMaterials = Array.from(this._xTermLayerMap.values());
+			const timeUniforms = this._shaderPasses.filter(pass => {
 				return pass.getFullscreenMaterial().uniforms.time !== undefined;
+			}).map(pass => {
+				return pass.getFullscreenMaterial().uniforms.time;
 			});
 
-			const materialsLength = materials.length;
-			const materialsWithTimeUniformLength = materialsWithTimeUniform.length;
+			const xTermMaterialsLength = xTermMaterials.length;
+			const timeUniformsLength = timeUniforms.length;
 
 			const that = this;
 
 			(function render() {
 				that._animationId = window.requestAnimationFrame(render);
 
-				for (let i = 0; i < materialsWithTimeUniformLength; i++) {
-					materialsWithTimeUniform[i].uniforms.time.value = that._clock.getElapsedTime();
+				for (let i = 0; i < timeUniformsLength; i++) {
+					timeUniforms.value = that._clock.getElapsedTime();
 				}
 
-				for (let i = 0; i < materialsLength; i++) {
-					materials[i].map.needsUpdate = true;
+				for (let i = 0; i < xTermMaterialsLength; i++) {
+					xTermMaterials[i].map.needsUpdate = true;
 				}
 
 				that._composer.render(that._clock.getDelta());
@@ -278,12 +277,12 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_replaceTexture(removedCanvas, addedCanvas) {
-			const affectedLayer = this._layers[removedCanvas.classList.toString()];
+			const affectedMaterial = this._xTermLayerMap.get(removedCanvas);
 			const newTexture = new CanvasTexture(addedCanvas);
 			newTexture.minFilter = LinearFilter;
 
-			affectedLayer.material.map.dispose();
-			affectedLayer.material.map = newTexture;
+			affectedMaterial.map.dispose();
+			affectedMaterial.map = newTexture;
 		}
 
 		componentWillUnmount() {
@@ -292,6 +291,10 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 		}
 
+		/**
+		 * Garbage collection. Also, try many various things to dispose the scene.
+		 * I don't know what the proper way is to do this.
+		 */
 		destroy() {
 			this._cancelAnimationLoop();
 			this._clock.stop();
@@ -316,12 +319,13 @@ exports.decorateTerm = (Term, { React }) => {
 
 			this._isInit = false;
 			this._term = this._container = this._xTermScreen = this._canvas = null;
-			this._layerObserver = this._layers = this.passes = null;
+			this._layerObserver = this._xTermLayerMap = null;
+			this.passes = this._shaderPasses = null;
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null;
 		}
 	}
 
-	return PostProcessing;
+	return HyperPostProcessing;
 };
 
 // CSS to position the our canvas correctly
