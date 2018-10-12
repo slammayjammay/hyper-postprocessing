@@ -37,7 +37,7 @@ Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90
 [6]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
 
 ## Performance
-Performance will decline as the number of shaders that are chained together increases. For the best results, keep the number of renders to a minimum. Tools like [glslify](https://github.com/glslify/glslify) can help achieve this.
+With the release of `postprocessing` v5, performance concerns when chaining multiple effects are now a non-issue. For info on how to create a performant effect, please see the excellent documentation at the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects).
 
 ## How to setup
 In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugins. Then to specify options for this plugin, add a key `hyperPostprocessing` inside the `config` entry:
@@ -56,93 +56,42 @@ module.exports = {
 	]
 }
 ```
-The entry file should export the shader(s) you want to add to your terminal window. It can be:
-1. Option 1: a string, assumed to be a fragment shader.
-2. Option 2: an object specifying `vertexShader`, `fragmentShader`, `shaderPass`, and/or `shaderMaterial`. If `shaderPass` is present, the value is assumed to be an instance of a `ShaderPass` that will be added directly to `EffectComposer`. If `shaderMaterial` is present, the value is assumed to be an instance of a `ShaderMaterial` and will be paired with a `ShaderPass` that will be passed to `EffectComposer`. Providing `vertexShader` is optional.
-3. Option 3: an array of options 1 or 2.
-4. Option 4: a function that returns either option 1 or 2 or 3.
+The entry file should export the effect(s) you want to add to your terminal window. It can export any one of these options:
+1. A string, assumed to be a fragment shader. An [Effect](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects) will be created with the given string, and will then be incorporated into an [EffectPass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/EffectPass.js~EffectPass.html).
 
-For more complex shaders, you can build on a (slightly tweaked) `ShaderPass` or `ShaderMaterial` from `postprocessing`. Let's say you want to load another image as a texture and add it as a uniform to `ShaderMaterial`.
+2. An object specifying `vertexShader`, `fragmentShader`, or `pass`. If `fragmentShader` is present, the same steps in option 1 will be taken, giving `vertexShader` if present. If `pass` is present, that pass will be added to the EffectComposer (must be a valid instance of a [postprocessing Pass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/Pass.js~Pass.html)).
+
+3. An array of options 1 or 2. If the array contains multiple adjacent strings, they will all be combined into one EffectPass. If the array given contains both strings and objects, only strings adjacent to one another will be combined.
+
+4. A function that returns either option 1 or 2 or 3. The function is given an object containing the `hyperTerm` and `xTerm` instances.
+
+Note: if exporting a custom pass, make sure to export an object with the "pass" key pointing to the pass:
+```js
+const customPass = new CustomPass();
+
+// module.exports = customPass; // no!
+module.exports = { pass: customPass };
+```
+
+or if exporting a function:
 ```js
 /* path-to-entry-file.js */
+module.exports = ({ hyperTerm, xTerm }) => {
+  const customPass = new CustomPass();
 
-const { TextureLoader } = require('three');
-
-// export option 4
-module.exports = ({ ShaderPass, ShaderMaterial, hyperTerm, xTerm }) => {
-  const shaderMaterialOptions = {
-    uniforms: {
-      // if constructing from the provided ShaderMaterial, the fragment shader
-      // will have access to the default uniforms as well
-      imageTexture: { value: null }
-    },
-    fragmentShader: '...a valid fragment shader string...'
-  };
-  const shaderMaterial = new ShaderMaterial(shaderMaterialOptions);
-
-  new TextureLoader().load('path/to/image/', texture => {
-    shaderMaterial.uniforms.imageTexture.value = texture;
-  });
-
-  // error! this function must return option 1, 2, or 3
-  return shaderMaterial;
-
-  return { shaderMaterial }; // option 2
-
-  // option 3, containing options 1 or 2
-  return [
-    'a fragment shader',
-    { shaderPass: new ShaderPass(shaderMaterial) }
-  ];
+  // return customPass; // no!
+  return { pass: customPass };
 };
+
 ```
 
 ## Uniforms
-Vertex and fragment shaders have access to several uniforms:
-* `sampler2D tDiffuse` -- the xterm terminal image
+* `sampler2D inputBuffer` -- the xterm terminal image
 * `float aspect` -- the aspect ratio of the screen
 * `vec2 resolution` -- the image width and height in pixels
-* `float timeElapsed` -- the amount of time that has passed since the initial render
-* `float timeDelta` -- the amount of time that has passed since the last render of this terminal
+* `float time` -- the amount of time that has passed since the initial render
 
-Note: if you export a custom shader material that is not an instance of the provided `ShaderMaterial`, the material's fragment shader will not have access to these uniforms.
-
-## Custom Uniforms
-If you want to set additional uniforms, you can extend and return an instance of `ShaderPass`. For example if you wanted to set an opacity uniform (poor example but for demonstrative purposes):
-```js
-/* path-to-entry-file.js */
-
-module.exports = ({ ShaderPass, ShaderMaterial, hyperTerm, xTerm }) => {
-  const fragmentShader = `
-  uniform sampler2D tDiffuse;
-  uniform float myOpacityUniform;
-  varying vec2 vUv;
-
-  void main() {
-    vec4 color = texture2D(tDiffuse, vUv);
-    color *= myOpacityUniform;
-    gl_FragColor = color;
-  }
-  `;
-
-  class CustomShaderPass extends ShaderPass {
-    render(renderer, readBuffer, writeBuffer, timeDelta) {
-      // set any custom uniforms here -- important to go before the `super` call
-      this.material.uniforms.myOpacityUniform.value = 0.3;
-
-      super.render(...arguments);
-    }
-  }
-
-  const shaderMaterial = new ShaderMaterial({
-    fragmentShader,
-    uniforms: {
-      myOpacityUniform: { value: null }
-    }
-  });
-
-  const customShaderPass = new CustomShaderPass(shaderMaterial);
-
-  return { shaderPass: customShaderPass };
-};
-```
+EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These will not be available to instances of [ShaderPasses](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/ShaderPass.js~ShaderPass.html).
+* `uniform vec2 texelSize`
+* `uniform float cameraNear`
+* `uniform float cameraFar`

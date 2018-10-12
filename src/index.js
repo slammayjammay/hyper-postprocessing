@@ -200,7 +200,9 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		/**
-		 * Sets the given uniforms on all instances of ShaderPasses.
+		 * Sets the given uniforms on all instances of ShaderPasses. We don't need
+		 * to set uniforms on any EffectPasses -- all of the uniforms used here are
+		 * automatically updated by postprocessing.
 		 *
 		 * @param {Object} obj - A map with uniform strings as keys and their value
 		 * as values.
