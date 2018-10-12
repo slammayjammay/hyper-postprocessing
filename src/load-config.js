@@ -63,7 +63,7 @@ function loadFromArray(array) {
 		}
 
 		if (effectStrings.length > 0) {
-			newConfig.push({ shaderPass: loadFromEffectStrings(effectStrings) });
+			newConfig.push({ pass: loadFromEffectStrings(effectStrings) });
 			effectStrings = [];
 		}
 
@@ -71,16 +71,16 @@ function loadFromArray(array) {
 	}
 
 	if (effectStrings.length > 0) {
-		newConfig.push({ shaderPass: loadFromEffectStrings(effectStrings) });
+		newConfig.push({ pass: loadFromEffectStrings(effectStrings) });
 	}
 
 	return newConfig.map(item => parseConfig(item));
 }
 
-function loadFromEffectStrings(strings, vertexShader) {
+function loadFromEffectStrings(fragments, vertex) {
 	const effects = [];
 
-	for (const fragment of strings) {
+	for (const fragment of fragments) {
 		effects.push(new Effect('DefaultEffect', fragment));
 	}
 
@@ -88,12 +88,12 @@ function loadFromEffectStrings(strings, vertexShader) {
 }
 
 function loadFromObject(object) {
-	if (object.shaderPass) {
-		return object.shaderPass;
+	if (object.pass) {
+		return object.pass;
 	}
 
 	if (object.fragmentShader) {
-		return loadFromEffectString(object.fragmentShader, object.vertexShader);
+		return loadFromEffectStrings([object.fragmentShader], object.vertexShader);
 	}
 
 	return null;
