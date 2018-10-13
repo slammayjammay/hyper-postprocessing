@@ -19,7 +19,7 @@ import {
 	Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Vector2,
 	MeshBasicMaterial, CanvasTexture, LinearFilter, Clock
 } from 'three';
-import { EffectComposer, RenderPass, ShaderPass } from 'postprocessing';
+import { EffectComposer, RenderPass, Pass, EffectPass } from 'postprocessing';
 import loadConfig from './load-config';
 
 // read config from the `hyperPostprocessing` key in .hyper.js config
@@ -59,7 +59,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null; // threejs + postprocessing stuff
 
 			this.passes = []; // all of the passes for EffectComposer
-			this._shaderPasses = []; // a subset of passes that are all ShaderPasses (no EffectPasses)
+			this._shaderPasses = []; // a subset of all passes that are not an EffectPass
 		}
 
 		_onDecorated(term) {
@@ -102,7 +102,9 @@ exports.decorateTerm = (Term, { React }) => {
 			this.passes = [new RenderPass(this._scene, this._camera), ...passes];
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
-			this._shaderPasses = this.passes.filter(pass => pass instanceof ShaderPass);
+			this._shaderPasses = this.passes.slice(1).filter(pass => {
+				return (pass instanceof Pass) && !(pass instanceof EffectPass);
+			});
 
 			// listen for any changes that happen inside XTerm's screen
 			this._layerObserver = new MutationObserver(this._onCanvasReplacement);
