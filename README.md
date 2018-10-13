@@ -1,33 +1,33 @@
 # `hyper-postprocessing`
 
-A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fragment shaders to the terminal window. [Hyper v2](https://zeit.co/blog/hyper2) trashed the old [hterm](https://chromium.googlesource.com/apps/libapps/+/master/hterm) DOM-based rendering system and transitioned to the [xterm](https://github.com/xtermjs/xterm.js/) canvas-based system, which makes it much easier to add [`postprocessing`](https://github.com/vanruesc/postprocessing) effects to the terminal window.
+A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fragment shaders to the terminal window.
 
-Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
+Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
 ## Examples
 | ![Chalk][1] |
 |:---:|
-| A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/). [Source](examples/chalk/) |
+| A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/).
 
 | ![Space travel][2] |
 |:---:|
-| A killer [space shader](https://www.shadertoy.com/view/XlfGRj) made by **Kali**. [Source](examples/space-travel/) |
+| A killer [space shader](https://www.shadertoy.com/view/XlfGRj) made by **Kali**.
 
 | ![Glitch][3] |
 |:---:|
-| Glitchy effect, one of the effects provided by [`postprocessing`](https://github.com/vanruesc/postprocessing). [Source](examples/glitch/) |
+| Glitchy effect, one of the effects provided by [`postprocessing`](https://github.com/vanruesc/postprocessing).
 
 | ![Underwater][4] |
 |:---:|
-| Underwatery effect, using a [shader](https://www.shadertoy.com/view/4slGRM) made by **bitek**. [Source](examples/underwater/) |
+| Underwatery effect, using a [shader](https://www.shadertoy.com/view/4slGRM) made by **bitek**.
 
 | ![Film][5] |
 |:---:|
-| Retro filmy effect, using a [shader](https://www.shadertoy.com/view/Md3SRM) made by **manoloide**. [Source](examples/film/) |
+| Retro filmy effect, using a [shader](https://www.shadertoy.com/view/Md3SRM) made by **manoloide**.
 
 | ![Blend][6] |
 |:---:|
-| Example of [blending](http://mrdoob.github.io/webgl-blendfunctions/blendfunc.html) an image and text. [Source](examples/fallout-boy/) |
+| An image blended through only where text is printed.
 
 [1]: https://user-images.githubusercontent.com/11801881/46054056-5bd76580-c0fa-11e8-95c2-e8dc6a2040e5.gif
 [2]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
@@ -37,7 +37,7 @@ Inspired by the effects used by [cool-retro-term](https://github.com/Swordfish90
 [6]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
 
 ## Performance
-With the release of `postprocessing` v5, performance concerns when chaining multiple effects are now a non-issue. For info on how to create a performant effect, please see the excellent documentation at the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects).
+With the release of `postprocessing` v5, performance concerns when chaining multiple effects are now a non-issue. For info on how to create a performant effect, see the excellent documentation at the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects).
 
 ## How to setup
 In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugins. Then to specify options for this plugin, add a key `hyperPostprocessing` inside the `config` entry:
@@ -63,10 +63,11 @@ The entry file should export the effect(s) you want to add to your terminal wind
 
 3. An array of options 1 or 2. If the array contains multiple adjacent strings, they will all be combined into one EffectPass. If the array given contains both strings and objects, only strings adjacent to one another will be combined.
 
-4. A function that returns either option 1 or 2 or 3. The function is given an object containing the `hyperTerm` and `xTerm` instances.
+4. A function that returns either option 1 or 2 or 3. An object containing the `hyperTerm` and `xTerm` instances will be passed to it.
 
 Note: if exporting a custom pass, make sure to export an object with the "pass" key pointing to the pass:
 ```js
+/* path-to-entry-file.js */
 const customPass = new CustomPass();
 
 // module.exports = customPass; // no!
@@ -91,7 +92,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 * `vec2 resolution` -- the image width and height in pixels
 * `float time` -- the amount of time that has passed since the initial render
 
-EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These will not be available to instances of [ShaderPasses](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/ShaderPass.js~ShaderPass.html).
+EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These will not be available to passes that are not EffectPasses.
 * `uniform vec2 texelSize`
 * `uniform float cameraNear`
 * `uniform float cameraFar`
