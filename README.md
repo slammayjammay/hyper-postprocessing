@@ -15,7 +15,7 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
 | ![Glitch][3] |
 |:---:|
-| Glitchy effect, one of the effects provided by [`postprocessing`](https://github.com/vanruesc/postprocessing).
+| Glitch effect, as well as several more provided by [`postprocessing`](https://github.com/vanruesc/postprocessing).
 
 | ![Underwater][4] |
 |:---:|
@@ -31,7 +31,7 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
 [1]: https://user-images.githubusercontent.com/11801881/46054056-5bd76580-c0fa-11e8-95c2-e8dc6a2040e5.gif
 [2]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
-[3]: https://user-images.githubusercontent.com/11801881/40855038-1dce9a88-6588-11e8-9f3a-ec552faf0631.gif
+[3]: https://user-images.githubusercontent.com/11801881/46902282-74c07480-ce77-11e8-85aa-422e5b7bc39e.gif
 [4]: https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif
 [5]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
 [6]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
