@@ -1,8 +1,8 @@
 // https://www.shadertoy.com/view/4slGRM
-const float PI = 3.1415926535897932;
 
 // play with these parameters to custimize the effect
 // ===================================================
+uniform sampler2D backgroundImage;
 
 //speed
 const float speed = 0.1;
@@ -23,7 +23,6 @@ const float intence = 700.;
 const float reflectionCutOff = 0.012;
 const float reflectionIntence = 200000.;
 
-// ===================================================
 float col(vec2 coord,float time) {
 	float delta_theta = 2.0 * PI / float(angle);
 	float col = 0.0;
@@ -40,12 +39,8 @@ float col(vec2 coord,float time) {
 	return cos(col);
 }
 
-//---------- main
-
-vec2 ripple(vec2 inputUV) {
-	float time = timeElapsed*1.3;
-
-	vec2 p = inputUV.xy, c1 = p, c2 = p;
+void mainUv(inout vec2 uv) {
+	vec2 p = uv.xy, c1 = p, c2 = p;
 	float cc1 = col(c1,time);
 
 	c2.x += resolution.x/delta;
@@ -63,9 +58,7 @@ vec2 ripple(vec2 inputUV) {
 	float ddx = dx - reflectionCutOff;
 	float ddy = dy - reflectionCutOff;
 	if (ddx > 0. && ddy > 0.)
-	alpha = pow(alpha, ddx*ddy*reflectionIntence);
+		alpha = pow(alpha, ddx*ddy*reflectionIntence);
 
-	return c1;
+	uv = c1;
 }
-
-#pragma glslify: export(ripple)

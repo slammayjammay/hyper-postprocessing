@@ -5,36 +5,36 @@ A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fra
 Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
 ## Examples
-| ![Chalk][1] |
+| ![Space travel][1] |
 |:---:|
-| A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/).
+| A killer [space shader](https://www.shadertoy.com/view/XlfGRj) made by **Kali**. [Example](examples/effects/space-travel)
 
-| ![Space travel][2] |
+| ![Glitch][2] |
 |:---:|
-| A killer [space shader](https://www.shadertoy.com/view/XlfGRj) made by **Kali**.
+| Glitch effect, as well as several more provided by [`postprocessing`](https://github.com/vanruesc/postprocessing). [Example](examples/effects/glitch)
 
-| ![Glitch][3] |
+| ![Ripple][3] |
 |:---:|
-| Glitch effect, as well as several more provided by [`postprocessing`](https://github.com/vanruesc/postprocessing).
+| Ripply effect, using a [shader](https://www.shadertoy.com/view/4slGRM) made by **bitek**. [Example](examples/effects/ripple)
 
-| ![Underwater][4] |
+| ![Film][4] |
 |:---:|
-| Underwatery effect, using a [shader](https://www.shadertoy.com/view/4slGRM) made by **bitek**.
+| Retro filmy effect, using a [shader](https://www.shadertoy.com/view/Md3SRM) made by **manoloide**. [Example](examples/effects/film)
 
-| ![Film][5] |
+| ![Blend][5] |
 |:---:|
-| Retro filmy effect, using a [shader](https://www.shadertoy.com/view/Md3SRM) made by **manoloide**.
+| An image blended through only where text is printed. [Example](examples/effects/fallout-boy)
 
-| ![Blend][6] |
+| ![Chalk][6] |
 |:---:|
-| An image blended through only where text is printed.
+| A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/). [Example](examples/effects/chalk)
 
-[1]: https://user-images.githubusercontent.com/11801881/46054056-5bd76580-c0fa-11e8-95c2-e8dc6a2040e5.gif
-[2]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
-[3]: https://user-images.githubusercontent.com/11801881/46902282-74c07480-ce77-11e8-85aa-422e5b7bc39e.gif
-[4]: https://user-images.githubusercontent.com/11801881/40855040-200a1b60-6588-11e8-8cd7-adffdb6482e3.gif
-[5]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
-[6]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
+[1]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
+[2]: https://user-images.githubusercontent.com/11801881/46902282-74c07480-ce77-11e8-85aa-422e5b7bc39e.gif
+[3]: https://user-images.githubusercontent.com/11801881/46912798-700dc600-cf34-11e8-89ce-89c195f06312.gif
+[4]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
+[5]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
+[6]: https://user-images.githubusercontent.com/11801881/46054056-5bd76580-c0fa-11e8-95c2-e8dc6a2040e5.gif
 
 ## Performance
 With the release of `postprocessing` v5, performance concerns when chaining multiple effects are now a non-issue. For info on how to create a performant effect, see the excellent documentation at the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects).
