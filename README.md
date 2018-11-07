@@ -83,8 +83,9 @@ module.exports = ({ hyperTerm, xTerm }) => {
   // return customPass; // no!
   return { pass: customPass };
 };
-
 ```
+
+Do not export the initial `RenderPass` that `postprocessing` requires. This is done automatically.
 
 ## Uniforms
 * `sampler2D inputBuffer` -- the xterm terminal image
