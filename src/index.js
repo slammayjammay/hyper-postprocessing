@@ -113,15 +113,14 @@ exports.decorateTerm = (Term, { React }) => {
 			// set our canvas size and begin rendering
 			// i don't think there's a need to remove this listener
 			this._term.term.on('resize', () => {
-				const {
-					canvasWidth, canvasHeight, scaledCanvasWidth, scaledCanvasHeight
-				} = this._term.term.renderer.dimensions;
+				const { offsetWidth: w, offsetHeight: h } = this._term.term.element;
+				const { devicePixelRatio } = window;
 
-				this._composer.setSize(canvasWidth, canvasHeight);
+				this._composer.setSize(w, h);
 
 				this._setUniforms({
-					aspect: canvasWidth / canvasHeight,
-					resolution: new Vector2(scaledCanvasWidth, scaledCanvasHeight)
+					aspect: w / h,
+					resolution: new Vector2(w * devicePixelRatio, h * devicePixelRatio)
 				});
 			});
 
@@ -140,7 +139,7 @@ exports.decorateTerm = (Term, { React }) => {
 		 * will use to create textures out of.
 		 */
 		_setupScene(renderLayers) {
-			const { canvasWidth, canvasHeight } = this._term.term.renderer.dimensions;
+			const { offsetWidth, offsetHeight } = this._term.term.element;
 
 			this._canvas = document.createElement('canvas');
 			this._canvas.classList.add('hyper-postprocessing', 'canvas');
@@ -155,10 +154,10 @@ exports.decorateTerm = (Term, { React }) => {
 				alpha: true
 			});
 			this._renderer.setPixelRatio(window.devicePixelRatio);
-			this._renderer.setSize(canvasWidth, canvasHeight);
+			this._renderer.setSize(offsetWidth, offsetHeight);
 
 			// camera!
-			const [w, h] = [canvasWidth / 2, canvasHeight / 2];
+			const [w, h] = [offsetWidth / 2, offsetHeight / 2];
 			this._camera = new OrthographicCamera(-w, w, h, -h, 1, 1000);
 			this._camera.position.z = 1;
 
@@ -170,7 +169,7 @@ exports.decorateTerm = (Term, { React }) => {
 				const texture = new CanvasTexture(canvas);
 				texture.minFilter = LinearFilter;
 
-				const geometry = new PlaneGeometry(canvasWidth, canvasHeight);
+				const geometry = new PlaneGeometry(offsetWidth, offsetHeight);
 				const material = new MeshBasicMaterial({
 					color: 0xFFFFFF,
 					map: texture,
