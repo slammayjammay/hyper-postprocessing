@@ -29,12 +29,19 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 |:---:|
 | A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/). [Example](examples/effects/chalk)
 
+| ![Postprocessing-Demo][7] |
+|:---:|
+| This picture shows bloom, but the example shows all the postprocessing lib's premade effects in commented-out code. [Example](examples/effects/postprocessing-demo)
+
+
 [1]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
 [2]: https://user-images.githubusercontent.com/11801881/46902282-74c07480-ce77-11e8-85aa-422e5b7bc39e.gif
 [3]: https://user-images.githubusercontent.com/11801881/46912798-700dc600-cf34-11e8-89ce-89c195f06312.gif
 [4]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
 [5]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
 [6]: https://user-images.githubusercontent.com/11801881/46054056-5bd76580-c0fa-11e8-95c2-e8dc6a2040e5.gif
+[7]: https://user-images.githubusercontent.com/1566594/51676763-e318e500-1fd7-11e9-8bd1-ebf3877d97a9.PNG
+
 
 ## Performance
 With the release of `postprocessing` v5, performance concerns when chaining multiple effects are now a non-issue. For info on how to create a performant effect, see the excellent documentation at the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects).
