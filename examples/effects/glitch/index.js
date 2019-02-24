@@ -1,5 +1,6 @@
 const { homedir } = require('os');
 const { readFileSync } = require('fs');
+const { resolve } = require('path');
 const { Vector2 } = require('three');
 const {
 	EffectPass,
@@ -11,8 +12,6 @@ const {
 	VignetteEffect
 } = require('postprocessing');
 
-const BASE = `${homedir()}/hyper-postprocessing/examples`;
-
 module.exports = ({ hyperTerm, xTerm }) => {
 	const effects = [];
 
@@ -22,27 +21,31 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		columns: 0.05
 	}));
 
-	effects.push(new BloomEffect());
+	effects.push(new BloomEffect({
+		kernelSize: 3,
+		distinction: 1,
+		blendFunction: 1 // add
+	}));
 
-	effects.push(new ScanlineEffect({ density: 1 }));
+	effects.push(new ScanlineEffect({ density: 1.3 }));
 	effects.push(new SepiaEffect({ intensity: 0.5 }));
 	effects.push(new VignetteEffect({
-		darkness: 0.5,
-		offset: 0.2
+		darkness: 0.6,
+		offset: 0
 	}));
 
 	effects.push(new Effect(
 		'curvedMonitorEffect',
-		readFileSync(`${BASE}/glsl/curved-monitor.glsl`).toString()
+		readFileSync(resolve(__dirname, '../../glsl/curved-monitor.glsl')).toString()
 	));
 
 	effects.push(new Effect(
 		'sampling',
-		readFileSync(`${BASE}/glsl/sampling.glsl`).toString(),
+		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
 		{
 			blendFunction: 12 // normal -- overwrite
 		}
-	))
+	));
 
 	return { pass: new EffectPass(null, ...effects) };
 };

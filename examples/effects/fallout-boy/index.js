@@ -1,9 +1,8 @@
 const { homedir } = require('os');
 const { readFileSync } = require('fs');
+const { resolve } = require('path');
 const { TextureLoader, LinearFilter, Uniform } = require('three');
 const { EffectPass, Effect } = require('postprocessing');
-
-const BASE = `${homedir()}/hyper-postprocessing/examples`;
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	// turn all colors that aren't black into white -- then we can multiply the
@@ -11,13 +10,13 @@ module.exports = ({ hyperTerm, xTerm }) => {
 	// to black in the hyper config is required)
 	const textEffect = new Effect(
 		'textEffect',
-		readFileSync(`${BASE}/glsl/black-and-white.glsl`).toString()
+		readFileSync(resolve(__dirname, '../../glsl/black-and-white.glsl')).toString()
 	);
 
 	// move background image left
 	const backgroundEffect = new Effect(
 		'backgroundEffect',
-		readFileSync(`${BASE}/glsl/background-image.glsl`).toString(),
+		readFileSync(resolve(__dirname, '../../glsl/background-image.glsl')).toString(),
 		{
 			uniforms: new Map([['backgroundImage', new Uniform(null)]]),
 			defines: new Map([['motionX', '-0.1']]),
@@ -25,7 +24,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		}
 	);
 
-	new TextureLoader().load(`${BASE}/images/fallout-boy.jpg`, texture => {
+	new TextureLoader().load(resolve(__dirname, '../../images/fallout-boy.jpg'), texture => {
 		texture.minFilter = LinearFilter;
 		backgroundEffect.uniforms.get('backgroundImage').value = texture;
 	});

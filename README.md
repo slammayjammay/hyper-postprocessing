@@ -43,9 +43,6 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 [7]: https://user-images.githubusercontent.com/1566594/51676763-e318e500-1fd7-11e9-8bd1-ebf3877d97a9.PNG
 
 
-## Performance
-With the release of `postprocessing` v5, performance concerns when chaining multiple effects are now a non-issue. For info on how to create a performant effect, see the excellent documentation at the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects).
-
 ## How to setup
 In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugins. Then to specify options for this plugin, add a key `hyperPostprocessing` inside the `config` entry:
 ```js
@@ -63,7 +60,11 @@ module.exports = {
 	]
 }
 ```
-The entry file should export the effect(s) you want to add to your terminal window. It can export any one of these options:
+
+### Entry file
+
+The entry file will be required at Hyper startup. The exported object will be parsed and passed to [`postprocessing`](https://github.com/vanruesc/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki) is highly recommended to understand how the Effect Composer works. Any one of these options is acceptable:
+
 1. A string, assumed to be a fragment shader. An [Effect](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects) will be created with the given string, and will then be incorporated into an [EffectPass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/EffectPass.js~EffectPass.html).
 
 2. An object specifying `vertexShader`, `fragmentShader`, or `pass`. If `fragmentShader` is present, the same steps in option 1 will be taken, giving `vertexShader` if present. If `pass` is present, that pass will be added to the EffectComposer (must be a valid instance of a [postprocessing Pass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/Pass.js~Pass.html)).
@@ -92,7 +93,10 @@ module.exports = ({ hyperTerm, xTerm }) => {
 };
 ```
 
-Do not export the initial `RenderPass` that `postprocessing` requires. This is done automatically.
+Do not export the initial `RenderPass` that `EffectComposer` requires. This is done automatically.
+
+### Quick start
+`postprocessing` already provides a number of effects out of the box ([demo](https://vanruesc.github.io/postprocessing/public/demo/#bloom)). You can use [examples/entry-file.js](examples/entry-file.js) as a starting point to build your own effect, or see one of the [example effects](examples/effects) for a more custom approach.
 
 ## Uniforms
 * `sampler2D inputBuffer` -- the xterm terminal image
