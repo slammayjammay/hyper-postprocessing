@@ -1,8 +1,6 @@
-const { homedir } = require('os');
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const { ShaderPass, EffectPass, Effect, BloomEffect, LuminanceMaterial } = require('postprocessing');
-const { Vector2 } = require('three');
+const { EffectPass, Effect, BloomEffect } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	// two passes. one to scale the text down a bit so blooming doesn't go right

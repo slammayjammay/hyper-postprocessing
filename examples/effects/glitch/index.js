@@ -1,4 +1,3 @@
-const { homedir } = require('os');
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { Vector2 } = require('three');
