@@ -36,7 +36,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 
 	// bloom
 	spaceEffects.push(new BloomEffect({
-		kernelSize: 4,
+		kernelSize: 3,
 		distinction: -0.5
 	}));
 
