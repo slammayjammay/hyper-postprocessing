@@ -8,7 +8,6 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		'chalkEffect',
 		readFileSync(resolve(__dirname, '../../glsl/chalk.glsl')).toString(),
 		{
-			attributes: 2,
 			uniforms: new Map([['noiseTexture', new Uniform(null)]])
 		}
 	);
