@@ -29,7 +29,7 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 |:---:|
 | A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/). [Example](examples/effects/chalk)
 
-[1]: https://user-images.githubusercontent.com/11801881/40998978-590180b4-68be-11e8-8493-0d8189bcbedf.gif
+[1]: https://user-images.githubusercontent.com/11801881/53447611-56908680-39ca-11e9-98e6-3594f0f29b74.gif
 [2]: https://user-images.githubusercontent.com/11801881/46902282-74c07480-ce77-11e8-85aa-422e5b7bc39e.gif
 [3]: https://user-images.githubusercontent.com/11801881/46912798-700dc600-cf34-11e8-89ce-89c195f06312.gif
 [4]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
