@@ -22,24 +22,10 @@ import {
 import { EffectComposer, RenderPass, Pass, EffectPass } from 'postprocessing';
 import loadConfig from './load-config';
 
-// read config from the `hyperPostprocessing` key in .hyper.js config
-// there is probably a better way of doing this using the middleware but idc
-let CONFIG_OPTIONS = null;
 const CONFIG_DEFAULTS = {
 	entry: `${homedir()}/.hyper-postprocessing.js`
 
 	// TODO: possible option to not render the selection and link layer?
-};
-
-exports.middleware = () => next => action => {
-	switch (action.type) {
-		case 'CONFIG_LOAD':
-		case 'CONFIG_RELOAD':
-			const config = action.config.hyperPostprocessing || {};
-			CONFIG_OPTIONS = Object.assign({}, CONFIG_DEFAULTS, config);
-	}
-
-	next(action);
 };
 
 exports.decorateTerm = (Term, { React }) => {
@@ -60,6 +46,9 @@ exports.decorateTerm = (Term, { React }) => {
 
 			this.passes = []; // all of the passes for EffectComposer
 			this._shaderPasses = []; // a subset of all passes that are not an EffectPass
+
+			const userConfig = window.config.getConfig().hyperPostprocessing || {};
+			this.config = Object.assign({}, CONFIG_DEFAULTS, userConfig);
 		}
 
 		_onDecorated(term) {
@@ -67,7 +56,7 @@ exports.decorateTerm = (Term, { React }) => {
 				this.props.onDecorated(term);
 			}
 
-			if (!term || !CONFIG_OPTIONS.entry || this._isInit) {
+			if (!term || !this.config.entry || this._isInit) {
 				return;
 			}
 
@@ -76,7 +65,7 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_init() {
-			const passes = loadConfig(CONFIG_OPTIONS.entry, {
+			const passes = loadConfig(this.config.entry, {
 				hyperTerm: this._term,
 				xTerm: this._term.term
 			});
