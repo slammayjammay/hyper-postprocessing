@@ -1,16 +1,14 @@
-import { EffectPass, Effect } from 'postprocessing';
-
-let hyperTerm, xTerm;
+import requirePeer from './require-peer';
 
 /**
  * Tries to load from the config path, then parses the export and returns an
  * array of shader passes.
  *
  * @param {String} configPath - Absolute file path to the config file.
- * @param {Object} object - Contains additional data that will be passed along
+ * @param {Object} cbObj - Contains additional data that will be passed along
  * to the exported function.
  */
-export default (configPath, object) => {
+export default (configPath, cbObj) => {
 	let config;
 
 	try {
@@ -19,32 +17,30 @@ export default (configPath, object) => {
 		console.warn(e);
 	}
 
-	if (!config) {
-		return null;
+	if (typeof config === 'function') {
+		config = config(cbObj);
 	}
 
-	hyperTerm = object.hyperTerm;
-	xTerm = object.xTerm;
+	if (typeof config === 'object') {
+		requirePeer.set('three', config.three);
+		requirePeer.set('postprocessing', config.postprocessing);
+	}
 
-	const parsed = parseConfig(config);
+	const parsed = parseConfig(config, cbObj);
 	return (Array.isArray(parsed)) ? parsed : [parsed];
 }
 
-function parseConfig(config) {
+function parseConfig(config, cbObj) {
 	if (Array.isArray(config)) {
 		return loadFromArray(config);
 	}
 
 	if (typeof config === 'string') {
-		return loadFromEffectStrings([config]);
+		return loadFromEffectStrings(config);
 	}
 
 	if (typeof config === 'object') {
 		return loadFromObject(config);
-	}
-
-	if (typeof config === 'function') {
-		return loadFromFunction(config);
 	}
 }
 
@@ -78,6 +74,12 @@ function loadFromArray(array) {
 }
 
 function loadFromEffectStrings(fragments, vertex) {
+	if (typeof fragments === 'string') {
+		fragments = [fragments];
+	}
+
+	const { EffectPass, Effect } = requirePeer.get('postprocessing');
+
 	const effects = [];
 
 	for (const fragment of fragments) {
@@ -92,14 +94,14 @@ function loadFromObject(object) {
 		return object.pass;
 	}
 
+	if (object.passes) {
+		return object.passes;
+	}
+
 	if (object.fragmentShader) {
-		return loadFromEffectStrings([object.fragmentShader], object.vertexShader);
+		return loadFromEffectStrings(object.fragmentShader, object.vertexShader);
 	}
 
 	return null;
 }
 
-function loadFromFunction(callback) {
-	const config = callback({ hyperTerm, xTerm });
-	return parseConfig(config);
-}

@@ -15,12 +15,14 @@
  */
 
 import { homedir } from 'os';
-import {
-	Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Vector2,
-	MeshBasicMaterial, CanvasTexture, LinearFilter, Clock
-} from 'three';
-import { EffectComposer, RenderPass, Pass, EffectPass } from 'postprocessing';
 import loadConfig from './load-config';
+import requirePeer from './require-peer';
+
+// `three` and `postprocessing` will be required at runtime, either using what's
+// exported from the entry file or a fallback.
+// they will be required when loading the config, so they should only be used
+// after that occurs
+let THREE, PP;
 
 // read config from the `hyperPostprocessing` key in .hyper.js config
 // there is probably a better way of doing this using the middleware but idc
@@ -81,9 +83,12 @@ exports.decorateTerm = (Term, { React }) => {
 				xTerm: this._term.term
 			});
 
-			if (!passes || passes.length === 0) {
+			if (passes.length === 0) {
 				return;
 			}
+
+			THREE = requirePeer.get('three');
+			PP = requirePeer.get('postprocessing');
 
 			this._isInit = true;
 
@@ -96,14 +101,14 @@ exports.decorateTerm = (Term, { React }) => {
 			}
 
 			this._setupScene(renderLayers);
-			this._clock = new Clock({ autoStart: false});
+			this._clock = new THREE.Clock({ autoStart: false});
 
 			// store all our passes
-			this.passes = [new RenderPass(this._scene, this._camera), ...passes];
+			this.passes = [new PP.RenderPass(this._scene, this._camera), ...passes];
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
 			this._shaderPasses = this.passes.slice(1).filter(pass => {
-				return (pass instanceof Pass) && !(pass instanceof EffectPass);
+				return (pass instanceof PP.Pass) && !(pass instanceof PP.EffectPass);
 			});
 
 			// listen for any changes that happen inside XTerm's screen
@@ -114,13 +119,13 @@ exports.decorateTerm = (Term, { React }) => {
 			// i don't think there's a need to remove this listener
 			this._term.term.on('resize', () => {
 				const { offsetWidth: w, offsetHeight: h } = this._term.term.element;
-				const { devicePixelRatio } = window;
+				const dpRatio = window.devicePixelRatio;
 
 				this._composer.setSize(w, h);
 
 				this._setUniforms({
 					aspect: w / h,
-					resolution: new Vector2(w * devicePixelRatio, h * devicePixelRatio)
+					resolution: new THREE.Vector2(w * dpRatio, h * dpRatio)
 				});
 			});
 
@@ -145,10 +150,10 @@ exports.decorateTerm = (Term, { React }) => {
 			this._canvas.classList.add('hyper-postprocessing', 'canvas');
 
 			// scene!
-			this._scene = new Scene();
+			this._scene = new THREE.Scene();
 
 			// renderer!
-			this._renderer = new WebGLRenderer({
+			this._renderer = new THREE.WebGLRenderer({
 				canvas: this._canvas,
 				preserveDrawingBuffer: true,
 				alpha: true
@@ -158,24 +163,24 @@ exports.decorateTerm = (Term, { React }) => {
 
 			// camera!
 			const [w, h] = [offsetWidth / 2, offsetHeight / 2];
-			this._camera = new OrthographicCamera(-w, w, h, -h, 1, 1000);
+			this._camera = new THREE.OrthographicCamera(-w, w, h, -h, 1, 1000);
 			this._camera.position.z = 1;
 
 			// composer!
-			this._composer = new EffectComposer(this._renderer);
+			this._composer = new PP.EffectComposer(this._renderer);
 
 			// xTerm textures!
 			for (const canvas of renderLayers) {
-				const texture = new CanvasTexture(canvas);
-				texture.minFilter = LinearFilter;
+				const texture = new THREE.CanvasTexture(canvas);
+				texture.minFilter = THREE.LinearFilter;
 
-				const geometry = new PlaneGeometry(offsetWidth, offsetHeight);
-				const material = new MeshBasicMaterial({
+				const geometry = new THREE.PlaneGeometry(offsetWidth, offsetHeight);
+				const material = new THREE.MeshBasicMaterial({
 					color: 0xFFFFFF,
 					map: texture,
 					transparent: true
 				});
-				const mesh = new Mesh(geometry, material);
+				const mesh = new THREE.Mesh(geometry, material);
 
 				this._scene.add(mesh);
 				this._xTermLayerMap.set(canvas, material);
@@ -281,8 +286,8 @@ exports.decorateTerm = (Term, { React }) => {
 
 		_replaceTexture(removedCanvas, addedCanvas) {
 			const affectedMaterial = this._xTermLayerMap.get(removedCanvas);
-			const newTexture = new CanvasTexture(addedCanvas);
-			newTexture.minFilter = LinearFilter;
+			const newTexture = new THREE.CanvasTexture(addedCanvas);
+			newTexture.minFilter = THREE.LinearFilter;
 
 			affectedMaterial.map.dispose();
 			affectedMaterial.map = newTexture;
@@ -295,8 +300,7 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		/**
-		 * Garbage collection. Also, try many various things to dispose the scene.
-		 * I don't know what the proper way is to do this.
+		 * Garbage collection.
 		 */
 		destroy() {
 			this._cancelAnimationLoop();
