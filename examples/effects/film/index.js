@@ -7,7 +7,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		'filmEffect',
 		readFileSync(resolve(__dirname, '../../glsl/film.glsl')).toString(),
 		{
-			blendFunction: 12 // normal -- overwrite
+			blendFunction: 13 // normal -- overwrite
 		}
 	);
 

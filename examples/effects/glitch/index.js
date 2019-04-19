@@ -42,7 +42,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
 		{
-			blendFunction: 12 // normal -- overwrite
+			blendFunction: 13 // normal -- overwrite
 		}
 	));
 
