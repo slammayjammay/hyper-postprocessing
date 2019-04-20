@@ -1,6 +1,6 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const { EffectPass, Effect, BloomEffect } = require('postprocessing');
+const { EffectPass, Effect, BloomEffect, BlendFunction } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	// two passes. one to scale the text down a bit so blooming doesn't go right
@@ -22,7 +22,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
 		{
-			blendFunction: 12 // normal -- overwrite
+			blendFunction: BlendFunction.NORMAL // overwrite
 		}
 	));
 

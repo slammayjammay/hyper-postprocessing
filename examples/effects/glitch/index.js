@@ -8,7 +8,8 @@ const {
 	BloomEffect,
 	ScanlineEffect,
 	SepiaEffect,
-	VignetteEffect
+	VignetteEffect,
+	BlendFunction
 } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
@@ -23,7 +24,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 	effects.push(new BloomEffect({
 		kernelSize: 3,
 		distinction: 1,
-		blendFunction: 1 // add
+		blendFunction: BlendFunction.ADD
 	}));
 
 	effects.push(new ScanlineEffect({ density: 1.3 }));
@@ -42,7 +43,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
 		{
-			blendFunction: 12 // normal -- overwrite
+			blendFunction: BlendFunction.NORMAL // overwrite
 		}
 	));
 
