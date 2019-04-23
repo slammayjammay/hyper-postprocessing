@@ -60,7 +60,7 @@ The entry file will be required at Hyper startup. The exported object will be pa
 
 1. A string, assumed to be a fragment shader. An [Effect](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects) will be created with the given string, and will then be incorporated into an [EffectPass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/EffectPass.js~EffectPass.html).
 
-2. An object specifying `vertexShader`, `fragmentShader`, or `pass`. If `fragmentShader` is present, the same steps in option 1 will be taken, giving `vertexShader` if present. If `pass` is present, that pass will be added to the EffectComposer (must be a valid instance of a [postprocessing Pass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/Pass.js~Pass.html)).
+2. An object specifying `vertexShader`, `fragmentShader`, `pass`, or `passes`. If `fragmentShader` is present, the same steps in option 1 will be taken, giving `vertexShader` if present. If `pass` or `passes` is present, those passes will be added to the EffectComposer (must be valid instances of a [postprocessing Pass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/Pass.js~Pass.html)).
 
 3. An array of options 1 or 2. If the array contains multiple adjacent strings, they will all be combined into one EffectPass. If the array given contains both strings and objects, only strings adjacent to one another will be combined.
 
@@ -101,3 +101,22 @@ EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These 
 * `uniform vec2 texelSize`
 * `uniform float cameraNear`
 * `uniform float cameraFar`
+
+## A note about dependencies
+This plugin comes bundled with `three` and `postprocessing` as dependencies in order to work upon installation, however those should be viewed more as peer dependencies -- if your entry file makes use of either of them you should install them yourself.
+
+By default this plugin uses `postprocessing` v6.2.1 and its compatible version of `three` (v0.103.0), but can use other versions of those if needed. To do this you will need your entry file to export an object (or a function that returns an object) with a key of the dependency name and the value as the `require`'d dependency.
+
+For example if you want to use `postprocessing` version X.X.X (and its hypothetically compatible version of `three` Y.Y.Y):
+
+```js
+/* path-to-entry-file.js */
+const pp = require('postprocessing'); // version X.X.X
+const three = require('three'); // version Y.Y.Y
+
+module.exports = {
+  pass: pp.EffectPass(null, new pp.VignetteEffect()),
+  postprocessing: pp,
+  three: three
+};
+```
