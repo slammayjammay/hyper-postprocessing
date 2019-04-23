@@ -167,6 +167,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._composer = new EffectComposer(this._renderer);
 
 			// xTerm textures!
+			let zOffset = -renderLayers.length
 			for (const canvas of renderLayers) {
 				const texture = new CanvasTexture(canvas);
 				texture.minFilter = LinearFilter;
@@ -178,6 +179,7 @@ exports.decorateTerm = (Term, { React }) => {
 					transparent: true
 				});
 				const mesh = new Mesh(geometry, material);
+				mesh.position.z = ++zOffset
 
 				this._scene.add(mesh);
 				this._xTermLayerMap.set(canvas, material);
@@ -232,22 +234,13 @@ exports.decorateTerm = (Term, { React }) => {
 		 * need to sort.
 		 */
 		_sortLayers(renderLayers) {
+			function zIndex(element) {
+				const { zIndex } = window.getComputedStyle(element)
+				return zIndex === 'auto' ? 0 : Number(zIndex)
+			}
+
 			renderLayers.sort((a, b) => {
-				if (a.className.includes('cursor')) {
-					return 1
-				}
-				if (b.className.includes('cursor')) {
-					return -1
-				}
-
-				if (a.className.includes('link')) {
-					return 1
-				}
-				if (b.className.includes('link')) {
-					return -1
-				}
-
-				return 0
+				return zIndex(a) - zIndex(b)
 			})
 
 			return renderLayers
