@@ -24,24 +24,10 @@ import requirePeer from './require-peer';
 // after that occurs
 let THREE, PP;
 
-// read config from the `hyperPostprocessing` key in .hyper.js config
-// there is probably a better way of doing this using the middleware but idc
-let CONFIG_OPTIONS = null;
 const CONFIG_DEFAULTS = {
 	entry: `${homedir()}/.hyper-postprocessing.js`
 
 	// TODO: possible option to not render the selection and link layer?
-};
-
-exports.middleware = () => next => action => {
-	switch (action.type) {
-		case 'CONFIG_LOAD':
-		case 'CONFIG_RELOAD':
-			const config = action.config.hyperPostprocessing || {};
-			CONFIG_OPTIONS = Object.assign({}, CONFIG_DEFAULTS, config);
-	}
-
-	next(action);
 };
 
 exports.decorateTerm = (Term, { React }) => {
@@ -62,6 +48,9 @@ exports.decorateTerm = (Term, { React }) => {
 
 			this.passes = []; // all of the passes for EffectComposer
 			this._shaderPasses = []; // a subset of all passes that are not an EffectPass
+
+			const userConfig = window.config.getConfig().hyperPostprocessing || {};
+			this.config = Object.assign({}, CONFIG_DEFAULTS, userConfig);
 		}
 
 		_onDecorated(term) {
@@ -69,7 +58,7 @@ exports.decorateTerm = (Term, { React }) => {
 				this.props.onDecorated(term);
 			}
 
-			if (!term || !CONFIG_OPTIONS.entry || this._isInit) {
+			if (!term || !this.config.entry || this._isInit) {
 				return;
 			}
 
@@ -78,7 +67,7 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_init() {
-			const passes = loadConfig(CONFIG_OPTIONS.entry, {
+			const passes = loadConfig(this.config.entry, {
 				hyperTerm: this._term,
 				xTerm: this._term.term
 			});
@@ -95,12 +84,13 @@ exports.decorateTerm = (Term, { React }) => {
 			this._container = this._term.termRef;
 			this._xTermScreen = this._container.querySelector('.xterm .xterm-screen');
 
-			const renderLayers = this._xTermScreen.querySelectorAll('canvas');
+			const renderLayers = Array.from(this._xTermScreen.querySelectorAll('canvas'));
 			for (const canvas of renderLayers) {
 				canvas.style.opacity = 0;
 			}
 
-			this._setupScene(renderLayers);
+			const sortedLayers = this._sortLayers(renderLayers);
+			this._setupScene(sortedLayers);
 			this._clock = new THREE.Clock({ autoStart: false});
 
 			// store all our passes
@@ -170,6 +160,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._composer = new PP.EffectComposer(this._renderer);
 
 			// xTerm textures!
+			let zOffset = -renderLayers.length;
 			for (const canvas of renderLayers) {
 				const texture = new THREE.CanvasTexture(canvas);
 				texture.minFilter = THREE.LinearFilter;
@@ -181,6 +172,7 @@ exports.decorateTerm = (Term, { React }) => {
 					transparent: true
 				});
 				const mesh = new THREE.Mesh(geometry, material);
+				mesh.position.z = ++zOffset;
 
 				this._scene.add(mesh);
 				this._xTermLayerMap.set(canvas, material);
@@ -225,6 +217,26 @@ exports.decorateTerm = (Term, { React }) => {
 					}
 				}
 			}
+		}
+
+		/**
+		 * Sort correctly the renderLayers so the cursor texture is always
+		 * on top when we render it.
+		 *
+		 * @param {Iterable} renderLayers - The list of xTerm's render layers we
+		 * need to sort.
+		 */
+		_sortLayers(renderLayers) {
+			function zIndex(element) {
+				const { zIndex } = window.getComputedStyle(element);
+				return zIndex === 'auto' ? 0 : Number(zIndex);
+			}
+
+			renderLayers.sort((a, b) => {
+				return zIndex(a) - zIndex(b);
+			});
+
+			return renderLayers;
 		}
 
 		/**

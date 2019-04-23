@@ -27,6 +27,10 @@ export default (configPath, cbObj) => {
 	}
 
 	const parsed = parseConfig(config, cbObj);
+	if (!parsed) {
+		return [];
+	}
+
 	return (Array.isArray(parsed)) ? parsed : [parsed];
 }
 
@@ -42,6 +46,8 @@ function parseConfig(config, cbObj) {
 	if (typeof config === 'object') {
 		return loadFromObject(config);
 	}
+
+	return null;
 }
 
 /**

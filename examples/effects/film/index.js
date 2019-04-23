@@ -1,14 +1,12 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const { EffectPass, Effect } = require('postprocessing');
+const { EffectPass, Effect, BlendFunction } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	const filmEffect = new Effect(
 		'filmEffect',
 		readFileSync(resolve(__dirname, '../../glsl/film.glsl')).toString(),
-		{
-			blendFunction: 13 // normal -- overwrite
-		}
+		{ blendFunction: BlendFunction.NORMAL }
 	);
 
 	return { pass: new EffectPass(null, filmEffect) };

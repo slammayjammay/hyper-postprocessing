@@ -1,7 +1,7 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { TextureLoader, LinearFilter, Uniform } = require('three');
-const { EffectPass, Effect } = require('postprocessing');
+const { EffectPass, Effect, BlendFunction } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	const effects = [];
@@ -9,9 +9,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 	const backgroundEffect = new Effect(
 		'backgroundImage',
 		readFileSync(resolve(__dirname, '../../glsl/background-image.glsl')).toString(),
-		{
-			uniforms: new Map([['backgroundImage', new Uniform(null)]])
-		}
+		{ uniforms: new Map([['backgroundImage', new Uniform(null)]]) }
 	);
 	new TextureLoader().load(resolve(__dirname, '../../images/underwater.jpg'), texture => {
 		texture.minFilter = LinearFilter;
@@ -27,17 +25,13 @@ module.exports = ({ hyperTerm, xTerm }) => {
 	effects.push(new Effect(
 		'scaleEffect',
 		readFileSync(resolve(__dirname, '../../glsl/scale.glsl')).toString(),
-		{
-			defines: new Map([['scale', '0.9']])
-		}
+		{ defines: new Map([['scale', '0.9']]) }
 	));
 
 	effects.push(new Effect(
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
-		{
-			blendFunction: 13
-		}
+		{ blendFunction: BlendFunction.NORMAL }
 	));
 
 	return { pass: new EffectPass(null, ...effects) };
