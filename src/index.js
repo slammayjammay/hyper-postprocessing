@@ -79,12 +79,14 @@ exports.decorateTerm = (Term, { React }) => {
 			this._container = this._term.termRef;
 			this._xTermScreen = this._container.querySelector('.xterm .xterm-screen');
 
-			const renderLayers = this._xTermScreen.querySelectorAll('canvas');
+			const renderLayers = Array.from(this._xTermScreen.querySelectorAll('canvas'));
 			for (const canvas of renderLayers) {
 				canvas.style.opacity = 0;
 			}
 
-			this._setupScene(renderLayers);
+			const sortedLayers = this._sortLayers(renderLayers)
+
+			this._setupScene(sortedLayers);
 			this._clock = new Clock({ autoStart: false});
 
 			// store all our passes
@@ -154,6 +156,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._composer = new EffectComposer(this._renderer);
 
 			// xTerm textures!
+			let zOffset = -renderLayers.length
 			for (const canvas of renderLayers) {
 				const texture = new CanvasTexture(canvas);
 				texture.minFilter = LinearFilter;
@@ -165,6 +168,7 @@ exports.decorateTerm = (Term, { React }) => {
 					transparent: true
 				});
 				const mesh = new Mesh(geometry, material);
+				mesh.position.z = ++zOffset
 
 				this._scene.add(mesh);
 				this._xTermLayerMap.set(canvas, material);
@@ -209,6 +213,26 @@ exports.decorateTerm = (Term, { React }) => {
 					}
 				}
 			}
+		}
+
+		/**
+		 * Sort correctly the renderLayers so the cursor texture is always
+		 * on top when we render it.
+		 *
+		 * @param {Iterable} renderLayers - The list of xTerm's render layers we
+		 * need to sort.
+		 */
+		_sortLayers(renderLayers) {
+			function zIndex(element) {
+				const { zIndex } = window.getComputedStyle(element)
+				return zIndex === 'auto' ? 0 : Number(zIndex)
+			}
+
+			renderLayers.sort((a, b) => {
+				return zIndex(a) - zIndex(b)
+			})
+
+			return renderLayers
 		}
 
 		/**
