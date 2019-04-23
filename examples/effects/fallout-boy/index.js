@@ -1,7 +1,7 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { TextureLoader, LinearFilter, Uniform } = require('three');
-const { EffectPass, Effect } = require('postprocessing');
+const { EffectPass, Effect, BlendFunction } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	// turn all colors that aren't black into white -- then we can multiply the
@@ -19,7 +19,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		{
 			uniforms: new Map([['backgroundImage', new Uniform(null)]]),
 			defines: new Map([['motionX', '-0.1']]),
-			blendFunction: 10 // multiply
+			blendFunction: BlendFunction.MULTIPLY
 		}
 	);
 

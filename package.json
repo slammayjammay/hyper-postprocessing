@@ -28,7 +28,7 @@
     "webpack-cli": "^2.0.15"
   },
   "dependencies": {
-    "postprocessing": "^5.0.0",
-    "three": "^0.91.0"
+    "postprocessing": "^6.2.1",
+    "three": "^0.103.0"
   }
 }

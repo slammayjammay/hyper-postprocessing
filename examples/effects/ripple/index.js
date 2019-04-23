@@ -1,7 +1,7 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { TextureLoader, LinearFilter, Uniform } = require('three');
-const { EffectPass, Effect } = require('postprocessing');
+const { EffectPass, Effect, BlendFunction } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	const effects = [];
@@ -36,7 +36,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
 		{
-			blendFunction: 12
+			blendFunction: BlendFunction.NORMAL
 		}
 	));
 
