@@ -88,6 +88,8 @@ module.exports = ({ hyperTerm, xTerm }) => {
 
 Do not export the initial `RenderPass` that `EffectComposer` requires. This is done automatically.
 
+**Note:** The entry file should be kept within the `.hyper_plugins` project in order for `postprocessing` or `three` to be used.
+
 ### Quick start
 `postprocessing` already provides a number of effects out of the box ([demo](https://vanruesc.github.io/postprocessing/public/demo/#bloom)). You can use [examples/quick-start.js](examples/quick-start.js) as a starting point to build your own effect, or see one of the [example effects](examples/effects) for a more custom approach.
 
@@ -103,7 +105,7 @@ EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These 
 * `uniform float cameraFar`
 
 ## A note about dependencies
-This plugin comes bundled with `three` and `postprocessing` as dependencies in order to work upon installation, however those should be viewed more as peer dependencies -- if your entry file makes use of either of them you should install them yourself.
+This plugin comes bundled with `three` and `postprocessing` as dependencies in order to work upon installation, however those should be viewed more as peer dependencies -- if your entry file makes use of either of them you should install them yourself in the `.hyper_plugins` node project located in your home folder.
 
 By default this plugin uses `postprocessing` v6.2.1 and its compatible version of `three` (v0.103.0), but can use other versions of those if needed. To do this you will need your entry file to export an object (or a function that returns an object) with a key of the dependency name and the value as the `require`'d dependency.
 
