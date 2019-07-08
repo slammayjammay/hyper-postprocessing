@@ -125,6 +125,33 @@ exports.decorateTerm = (Term, { React }) => {
 				that._clock.start();
 				that._startAnimationLoop();
 			});
+
+			if (typeof this._term.vertexTransform === 'function') {
+				function replaceEvent(e, vertexTransform) {
+					if (e.syntethic) 
+						return;
+
+					e.preventDefault(); e.stopPropagation();
+
+					let copy = {};
+					for (var attr in e)
+						copy[attr] = e[attr];
+
+					let r = e.target.getBoundingClientRect();
+					let [x, y] = [(copy.clientX - r.left) / (r.right - r.left), (copy.clientY - r.top) / (r.bottom - r.top)];
+					[x, y] = vertexTransform([x, y]);
+					[copy.clientX, copy.clientY] = [x * (r.right - r.left) + r.left, y * (r.bottom - r.top) + r.top];
+
+					let e2 = new MouseEvent(copy.type, copy);
+					e2.syntethic = true;
+					copy.target.dispatchEvent(e2);
+				}
+
+				document.getElementsByClassName("term_wrapper")[0].addEventListener("click", e => replaceEvent(e, this._term.vertexTransform));
+				document.getElementsByClassName("term_wrapper")[0].addEventListener("mousedown", e => replaceEvent(e, this._term.vertexTransform));
+				document.getElementsByClassName("term_wrapper")[0].addEventListener("mouseup", e => replaceEvent(e, this._term.vertexTransform));
+				document.getElementsByClassName("term_wrapper")[0].addEventListener("mousemove", e => replaceEvent(e, this._term.vertexTransform));
+			}
 		}
 
 		/**
