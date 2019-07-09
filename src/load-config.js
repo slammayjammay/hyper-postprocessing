@@ -2,7 +2,7 @@ import requirePeer from './require-peer';
 
 /**
  * Tries to load from the config path, then parses the export and returns an
- * array of shader passes.
+ * object containing an array of shader passes and a coordinateTransform function
  *
  * @param {String} configPath - Absolute file path to the config file.
  * @param {Object} cbObj - Contains additional data that will be passed along
@@ -26,28 +26,28 @@ export default (configPath, cbObj) => {
 		requirePeer.set('postprocessing', config.postprocessing);
 	}
 
-	const parsed = parseConfig(config, cbObj);
-	if (!parsed) {
-		return [];
-	}
+	const parsed = parseConfig(config);
 
-	return (Array.isArray(parsed)) ? parsed : [parsed];
+	return {
+		passes: parsed,
+		coordinateTransform: config.coordinateTransform,
+	};
 }
 
-function parseConfig(config, cbObj) {
+function parseConfig(config) {
 	if (Array.isArray(config)) {
 		return loadFromArray(config);
 	}
 
 	if (typeof config === 'string') {
-		return loadFromEffectStrings(config);
+		return [loadFromEffectStrings(config)];
 	}
 
 	if (typeof config === 'object') {
 		return loadFromObject(config);
 	}
 
-	return null;
+	return [];
 }
 
 /**
@@ -65,21 +65,21 @@ function loadFromArray(array) {
 		}
 
 		if (effectStrings.length > 0) {
-			newConfig.push({ pass: loadFromEffectStrings(effectStrings) });
+			newConfig.push(loadFromEffectStrings(effectStrings));
 			effectStrings = [];
 		}
 
-		newConfig.push(array[i]);
+		newConfig.push(...parseConfig(array[i]));
 	}
 
 	if (effectStrings.length > 0) {
-		newConfig.push({ pass: loadFromEffectStrings(effectStrings) });
+		newConfig.push(loadFromEffectStrings(effectStrings));
 	}
 
-	return newConfig.map(item => parseConfig(item));
+	return newConfig;
 }
 
-function loadFromEffectStrings(fragments, vertex) {
+function loadFromEffectStrings(fragments) {
 	if (typeof fragments === 'string') {
 		fragments = [fragments];
 	}
@@ -97,7 +97,7 @@ function loadFromEffectStrings(fragments, vertex) {
 
 function loadFromObject(object) {
 	if (object.pass) {
-		return object.pass;
+		return [object.pass];
 	}
 
 	if (object.passes) {
@@ -105,9 +105,9 @@ function loadFromObject(object) {
 	}
 
 	if (object.fragmentShader) {
-		return loadFromEffectStrings(object.fragmentShader, object.vertexShader);
+		return [loadFromEffectStrings(object.fragmentShader)];
 	}
 
-	return null;
+	return [];
 }
 

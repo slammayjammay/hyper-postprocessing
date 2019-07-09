@@ -67,12 +67,12 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_init() {
-			const passes = loadConfig(this.config.entry, {
+			const parsedEntry = loadConfig(this.config.entry, {
 				hyperTerm: this._term,
 				xTerm: this._term.term
 			});
 
-			if (passes.length === 0) {
+			if (parsedEntry.passes.length === 0) {
 				return;
 			}
 
@@ -94,7 +94,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._clock = new THREE.Clock({ autoStart: false});
 
 			// store all our passes
-			this.passes = [new PP.RenderPass(this._scene, this._camera), ...passes];
+			this.passes = [new PP.RenderPass(this._scene, this._camera), ...parsedEntry.passes];
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
 			this._shaderPasses = this.passes.slice(1).filter(pass => {
@@ -126,8 +126,8 @@ exports.decorateTerm = (Term, { React }) => {
 				that._startAnimationLoop();
 			});
 
-			if (typeof this._term.vertexTransform === 'function') {
-				function replaceEvent(e, vertexTransform) {
+			if (typeof parsedEntry.coordinateTransform === 'function') {
+				function replaceEvent(e, coordinateTransform) {
 					if (e.syntethic) 
 						return;
 
@@ -138,19 +138,17 @@ exports.decorateTerm = (Term, { React }) => {
 						copy[attr] = e[attr];
 
 					let r = e.target.getBoundingClientRect();
-					let [x, y] = [(copy.clientX - r.left) / (r.right - r.left), (copy.clientY - r.top) / (r.bottom - r.top)];
-					[x, y] = vertexTransform([x, y]);
-					[copy.clientX, copy.clientY] = [x * (r.right - r.left) + r.left, y * (r.bottom - r.top) + r.top];
+					let [x, y] = [(copy.clientX - r.left) / (r.right - r.left), (r.bottom - copy.clientY) / (r.bottom - r.top)];
+					[x, y] = coordinateTransform([x, y]);
+					[copy.clientX, copy.clientY] = [x * (r.right - r.left) + r.left, r.bottom - y * (r.bottom - r.top)];
 
 					let e2 = new MouseEvent(copy.type, copy);
 					e2.syntethic = true;
 					copy.target.dispatchEvent(e2);
 				}
 
-				document.getElementsByClassName("term_wrapper")[0].addEventListener("click", e => replaceEvent(e, this._term.vertexTransform));
-				document.getElementsByClassName("term_wrapper")[0].addEventListener("mousedown", e => replaceEvent(e, this._term.vertexTransform));
-				document.getElementsByClassName("term_wrapper")[0].addEventListener("mouseup", e => replaceEvent(e, this._term.vertexTransform));
-				document.getElementsByClassName("term_wrapper")[0].addEventListener("mousemove", e => replaceEvent(e, this._term.vertexTransform));
+				for (let eventType of ["click", "mousedown", "mouseup", "mousemove"])
+					document.getElementsByClassName("term_wrapper")[0].addEventListener(eventType, e => replaceEvent(e, parsedEntry.coordinateTransform));
 			}
 		}
 

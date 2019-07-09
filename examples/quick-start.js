@@ -1,7 +1,7 @@
 const pp = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
-	return { pass: [
+	return { passes: [
 		// new pp.EffectPass(null, new pp.BokehEffect()),
 		// new pp.EffectPass(null, new pp.RealisticBokehEffect()),
 		// new pp.EffectPass(null, new pp.VignetteEffect()),
