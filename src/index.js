@@ -72,7 +72,7 @@ exports.decorateTerm = (Term, { React }) => {
 				xTerm: this._term.term
 			});
 
-			if (parsedEntry.passes.length === 0) {
+			if (!parsedEntry || parsedEntry.passes.length === 0) {
 				return;
 			}
 

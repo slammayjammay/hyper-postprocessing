@@ -15,6 +15,7 @@ export default (configPath, cbObj) => {
 		config = window.require(configPath);
 	} catch (e) {
 		console.warn(e);
+		return null;
 	}
 
 	if (typeof config === 'function') {
