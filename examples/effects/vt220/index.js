@@ -10,9 +10,8 @@ module.exports = ({ hyperTerm, xTerm }) => {
 			readFileSync(resolve(__dirname, '../../glsl/vt220.glsl')).toString(),
 			{ blendFunction: BlendFunction.NORMAL },
 		)),
-		coordinateTransform: function(vertex) {
+		coordinateTransform: function(x, y) {
 			let r = 4;
-			let [x, y] = vertex;
 			x = (x - 0.5) * 2;
 			y = (y - 0.5) * 2;
 

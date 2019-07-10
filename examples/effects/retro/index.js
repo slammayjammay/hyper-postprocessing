@@ -104,8 +104,7 @@ const frameEffect = new GlslEffect('retro_frame', {
 	}
 );
 
-function coordinateTransform(vertex) {
-	let [x, y] = vertex;
+function coordinateTransform(x, y) {
 	x -= 0.5;
 	y -= 0.5;
 

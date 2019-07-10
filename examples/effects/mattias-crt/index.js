@@ -10,8 +10,7 @@ module.exports = ({ hyperTerm, xTerm }) => {
 			readFileSync(resolve(__dirname, '../../glsl/mattias-crt.glsl')).toString(),
 			{ blendFunction: BlendFunction.NORMAL },
 		)),
-		coordinateTransform: function(vertex) {
-			let [x, y] = vertex;
+		coordinateTransform: function(x, y) {
 			x = (x - 0.5) * 2;
 			y = (y - 0.5) * 2;
 
