@@ -140,7 +140,7 @@ exports.decorateTerm = (Term, { React }) => {
 					let r = e.target.getBoundingClientRect();
 					let [w, h] = [r.width, r.height];
 					let [x, y] = [(copy.clientX - r.left) / w, (r.bottom - copy.clientY) / h];
-					[x, y] = coordinateTransform(x, y, w, h);
+					[x, y] = coordinateTransform(x, y);
 					[copy.clientX, copy.clientY] = [x * w + r.left, r.bottom - y * h];
 
 					let e2 = new MouseEvent(copy.type, copy);
