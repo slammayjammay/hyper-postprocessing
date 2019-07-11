@@ -57,6 +57,6 @@ void mainImage(const in vec4 inputColor, const in vec2 fragCoord, out vec4 fragC
 	color += frameColor * outShadow;
 
 	vec2 reflected = borderReflect(coords);
-	color += max(texture(inputBuffer, reflected).rgb * 0.3 - 0.1, 0.0);
+	color += max(texture(inputBuffer, reflected).rgb * 0.6 - 0.1, 0.0);
 	fragColor = vec4(color, 1.0);
 }
