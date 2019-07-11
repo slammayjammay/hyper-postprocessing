@@ -21,19 +21,20 @@ export default (configPath, cbObj) => {
 		config = config(cbObj);
 	}
 
+	if (!config) {
+		return null;
+	}
+
 	if (typeof config === 'object') {
 		requirePeer.set('three', config.three);
 		requirePeer.set('postprocessing', config.postprocessing);
 	}
 
-	const parsed = parseConfig(config, cbObj);
-	if (!parsed) {
-		return [];
-	}
+	const parsed = parseConfig(config, cbObj) || [];
 
 	return {
 		passes: Array.isArray(parsed) ? parsed : [parsed],
-		coordinateTransform: config && config.coordinateTransform,
+		coordinateTransform: config.coordinateTransform,
 	};
 }
 
