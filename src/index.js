@@ -67,12 +67,12 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_init() {
-			const passes = loadConfig(this.config.entry, {
+			const parsedEntry = loadConfig(this.config.entry, {
 				hyperTerm: this._term,
 				xTerm: this._term.term
 			});
 
-			if (passes.length === 0) {
+			if (!parsedEntry || parsedEntry.passes.length === 0) {
 				return;
 			}
 
@@ -94,7 +94,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._clock = new THREE.Clock({ autoStart: false});
 
 			// store all our passes
-			this.passes = [new PP.RenderPass(this._scene, this._camera), ...passes];
+			this.passes = [new PP.RenderPass(this._scene, this._camera), ...parsedEntry.passes];
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
 			this._shaderPasses = this.passes.slice(1).filter(pass => {
@@ -125,6 +125,32 @@ exports.decorateTerm = (Term, { React }) => {
 				that._clock.start();
 				that._startAnimationLoop();
 			});
+
+			if (typeof parsedEntry.coordinateTransform === 'function') {
+				function replaceEvent(e, coordinateTransform) {
+					if (e.syntethic) 
+						return;
+
+					e.preventDefault(); e.stopPropagation();
+
+					let copy = {};
+					for (var attr in e)
+						copy[attr] = e[attr];
+
+					let r = e.target.getBoundingClientRect();
+					let [w, h] = [r.width, r.height];
+					let [x, y] = [(copy.clientX - r.left) / w, (r.bottom - copy.clientY) / h];
+					[x, y] = coordinateTransform(x, y);
+					[copy.clientX, copy.clientY] = [x * w + r.left, r.bottom - y * h];
+
+					let e2 = new MouseEvent(copy.type, copy);
+					e2.syntethic = true;
+					copy.target.dispatchEvent(e2);
+				}
+
+				for (let eventType of ["click", "mousedown", "mouseup", "mousemove"])
+					document.getElementsByClassName("term_wrapper")[0].addEventListener(eventType, e => replaceEvent(e, parsedEntry.coordinateTransform));
+			}
 		}
 
 		/**

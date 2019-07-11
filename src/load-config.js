@@ -31,7 +31,10 @@ export default (configPath, cbObj) => {
 		return [];
 	}
 
-	return (Array.isArray(parsed)) ? parsed : [parsed];
+	return {
+		passes: Array.isArray(parsed) ? parsed : [parsed],
+		coordinateTransform: config && config.coordinateTransform,
+	};
 }
 
 function parseConfig(config, cbObj) {
