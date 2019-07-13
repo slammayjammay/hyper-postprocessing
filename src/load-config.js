@@ -83,7 +83,7 @@ function loadFromArray(array) {
 	return newConfig.map(item => parseConfig(item));
 }
 
-function loadFromEffectStrings(fragments, vertex) {
+function loadFromEffectStrings(fragments, vertexShader) {
 	if (typeof fragments === 'string') {
 		fragments = [fragments];
 	}
@@ -93,7 +93,7 @@ function loadFromEffectStrings(fragments, vertex) {
 	const effects = [];
 
 	for (const fragment of fragments) {
-		effects.push(new Effect('DefaultEffect', fragment));
+		effects.push(new Effect('DefaultEffect', fragment, { vertexShader }));
 	}
 
 	return new EffectPass(null, ...effects);
