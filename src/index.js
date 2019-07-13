@@ -128,14 +128,17 @@ exports.decorateTerm = (Term, { React }) => {
 
 			if (typeof parsedEntry.coordinateTransform === 'function') {
 				function replaceEvent(e, coordinateTransform) {
-					if (e.syntethic) 
+					if (e.syntethic) {
 						return;
+					}
 
-					e.preventDefault(); e.stopPropagation();
+					e.preventDefault();
+					e.stopPropagation();
 
 					let copy = {};
-					for (var attr in e)
+					for (var attr in e) {
 						copy[attr] = e[attr];
+					}
 
 					let r = e.target.getBoundingClientRect();
 					let [w, h] = [r.width, r.height];
@@ -148,8 +151,12 @@ exports.decorateTerm = (Term, { React }) => {
 					copy.target.dispatchEvent(e2);
 				}
 
-				for (let eventType of ["click", "mousedown", "mouseup", "mousemove"])
-					document.getElementsByClassName("term_wrapper")[0].addEventListener(eventType, e => replaceEvent(e, parsedEntry.coordinateTransform));
+				const el = document.querySelector('.term_wrapper');
+				for (let eventType of ['click', 'mousedown', 'mouseup', 'mousemove']) {
+					el.addEventListener(eventType, e => {
+						replaceEvent(e, parsedEntry.coordinateTransform);
+					});
+				}
 			}
 		}
 
