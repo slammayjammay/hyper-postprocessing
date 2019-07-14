@@ -5,13 +5,13 @@ A [Hyper](https://github.com/zeit/hyper) plugin that makes it easy to attach fra
 Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 
 ## Examples
-| ![Space travel][1] |
+| ![Cool Retro Term][1] |
+|:---:|
+| Some of the effects used in Cool Retro Term ported over by **norill**. [Example](examples/effects/retro)
+
+| ![Space travel][2] |
 |:---:|
 | A killer [space shader](https://www.shadertoy.com/view/XlfGRj) made by **Kali**. [Example](examples/effects/space-travel)
-
-| ![Glitch][2] |
-|:---:|
-| Glitch effect, as well as several more provided by [`postprocessing`](https://github.com/vanruesc/postprocessing). [Example](examples/effects/glitch)
 
 | ![Ripple][3] |
 |:---:|
@@ -29,8 +29,8 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 |:---:|
 | A sketchy/chalky shader made by [Ruofei Du](http://duruofei.com/). [Example](examples/effects/chalk)
 
-[1]: https://user-images.githubusercontent.com/11801881/53447611-56908680-39ca-11e9-98e6-3594f0f29b74.gif
-[2]: https://user-images.githubusercontent.com/11801881/46902282-74c07480-ce77-11e8-85aa-422e5b7bc39e.gif
+[1]: https://user-images.githubusercontent.com/11801881/61190318-49112b80-a64f-11e9-806d-0dc89f73d70c.gif
+[2]: https://user-images.githubusercontent.com/11801881/53447611-56908680-39ca-11e9-98e6-3594f0f29b74.gif
 [3]: https://user-images.githubusercontent.com/11801881/46912798-700dc600-cf34-11e8-89ce-89c195f06312.gif
 [4]: https://user-images.githubusercontent.com/11801881/40855043-2196500c-6588-11e8-8d00-79df78abeece.gif
 [5]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
