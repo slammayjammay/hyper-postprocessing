@@ -9,9 +9,6 @@
  *   4) one to render the cursor
  *
  * So we must apply any shader effects to all of these layers.
- *
- * Downside: any terminal contents that are re-positioned by shaders will be out
- * of sync with xTerm's text selection.
  */
 
 import { homedir } from 'os';

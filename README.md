@@ -88,6 +88,28 @@ module.exports = ({ hyperTerm, xTerm }) => {
 
 Do not export the initial `RenderPass` that `EffectComposer` requires. This is done automatically.
 
+
+#### Mouse events
+If your effects reposition any content inside the terminal, then mouse events will not be in sync with terminal visuals. You can optionally provide a `coordinateTransform` function in the exported object to change the coordinates of mouse events.
+
+```js
+/* path-to-entry-file.js */
+module.exports = {
+  fragmentShader: `
+  void mainUv(inout vec2 uv) {
+    uv.x = 1.0 - uv.x;
+  }
+  `,
+  coordinateTransform: function(x, y) {
+    return [1 - x, y];
+  }
+};
+```
+
+`coordinateTransform` will take in the x and y values of the mouse event, and return a tuple containing the modified values for each. The original mouse event will be prevented and stopped, and a new event will be fired at the new location.
+
+The `x` and `y` values are similar to `uv.x` and `uv.y` used in shaders, in that they both range from 0 to 1 and represent the location of the mouse event by percentage of the terminal screen. So a click at [x=0, y=0] would represent the bottom left corner of the screen and a click at [x=1, y=1] would represent the top right corner. Theoretically you can duplicate any `uv` transformations made in shaders and use them in this callback to fix any mouse-visual problems.
+
 ### Quick start
 `postprocessing` already provides a number of effects out of the box ([demo](https://vanruesc.github.io/postprocessing/public/demo/#bloom)). You can use [examples/quick-start.js](examples/quick-start.js) as a starting point to build your own effect, or see one of the [example effects](examples/effects) for a more custom approach.
 
