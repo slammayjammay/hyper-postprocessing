@@ -35,6 +35,7 @@ export default (configPath, cbObj) => {
 	return {
 		passes: Array.isArray(parsed) ? parsed : [parsed],
 		coordinateTransform: config.coordinateTransform,
+		fps: typeof config.fps === 'number' ? config.fps : 60
 	};
 }
 

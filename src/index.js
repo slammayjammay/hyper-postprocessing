@@ -23,8 +23,6 @@ let THREE, PP;
 
 const CONFIG_DEFAULTS = {
 	entry: `${homedir()}/.hyper-postprocessing.js`,
-	fps: 60,
-	// TODO: possible option to not render the selection and link layer?
 };
 
 exports.decorateTerm = (Term, { React }) => {
@@ -48,6 +46,7 @@ exports.decorateTerm = (Term, { React }) => {
 
 			const userConfig = window.config.getConfig().hyperPostprocessing || {};
 			this.config = Object.assign({}, CONFIG_DEFAULTS, userConfig);
+			this.parsedEntry = null; // exported object from entry file
 		}
 
 		_onDecorated(term) {
@@ -64,12 +63,12 @@ exports.decorateTerm = (Term, { React }) => {
 		}
 
 		_init() {
-			const parsedEntry = loadConfig(this.config.entry, {
+			this.parsedEntry = loadConfig(this.config.entry, {
 				hyperTerm: this._term,
 				xTerm: this._term.term
 			});
 
-			if (!parsedEntry || parsedEntry.passes.length === 0) {
+			if (!this.parsedEntry || this.parsedEntry.passes.length === 0) {
 				return;
 			}
 
@@ -91,7 +90,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._clock = new THREE.Clock({ autoStart: false});
 
 			// store all our passes
-			this.passes = [new PP.RenderPass(this._scene, this._camera), ...parsedEntry.passes];
+			this.passes = [new PP.RenderPass(this._scene, this._camera), ...this.parsedEntry.passes];
 			this.passes[this.passes.length - 1].renderToScreen = true;
 			this.passes.forEach(pass => this._composer.addPass(pass));
 			this._shaderPasses = this.passes.slice(1).filter(pass => {
@@ -123,7 +122,7 @@ exports.decorateTerm = (Term, { React }) => {
 				that._startAnimationLoop();
 			});
 
-			if (typeof parsedEntry.coordinateTransform === 'function') {
+			if (typeof this.parsedEntry.coordinateTransform === 'function') {
 				function replaceEvent(e, coordinateTransform) {
 					if (e.syntethic) {
 						return;
@@ -151,7 +150,7 @@ exports.decorateTerm = (Term, { React }) => {
 				const el = document.querySelector('.term_wrapper');
 				for (let eventType of ['click', 'mousedown', 'mouseup', 'mousemove']) {
 					el.addEventListener(eventType, e => {
-						replaceEvent(e, parsedEntry.coordinateTransform);
+						replaceEvent(e, this.parsedEntry.coordinateTransform);
 					});
 				}
 			}
@@ -286,21 +285,26 @@ exports.decorateTerm = (Term, { React }) => {
 			const timeUniformsLength = timeUniforms.length;
 
 			const that = this;
-			const fps = 1000 / this.config.fps;
+			const fps = 1000 / this.parsedEntry.fps;
+			let lastRenderTime = fps;
 			(function render() {
-				setTimeout(() => {
-					that._animationId = window.requestAnimationFrame(render);
+				that._animationId = window.requestAnimationFrame(render);
 
-					for (let i = 0; i < timeUniformsLength; i++) {
-						timeUniforms.value = that._clock.getElapsedTime();
-					}
+				const now = performance.now();
+				if (now - lastRenderTime < fps) {
+					return;
+				}
 
-					for (let i = 0; i < xTermMaterialsLength; i++) {
-						xTermMaterials[i].map.needsUpdate = true;
-					}
+				for (let i = 0; i < timeUniformsLength; i++) {
+					timeUniforms.value = that._clock.getElapsedTime();
+				}
 
-					that._composer.render(that._clock.getDelta());
-				}, fps);
+				for (let i = 0; i < xTermMaterialsLength; i++) {
+					xTermMaterials[i].map.needsUpdate = true;
+				}
+
+				that._composer.render(that._clock.getDelta());
+				lastRenderTime = now;
 			})();
 		}
 
@@ -373,6 +377,7 @@ exports.decorateTerm = (Term, { React }) => {
 			this._layerObserver = this._xTermLayerMap = null;
 			this.passes = this._shaderPasses = null;
 			this._clock = this._scene = this._renderer = this._camera = this._composer = null;
+			this.config = this.parsedEntry = null;
 		}
 	}
 
