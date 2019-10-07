@@ -22,8 +22,8 @@ import requirePeer from './require-peer';
 let THREE, PP;
 
 const CONFIG_DEFAULTS = {
-	entry: `${homedir()}/.hyper-postprocessing.js`
-
+	entry: `${homedir()}/.hyper-postprocessing.js`,
+	fps: 60,
 	// TODO: possible option to not render the selection and link layer?
 };
 
@@ -286,19 +286,21 @@ exports.decorateTerm = (Term, { React }) => {
 			const timeUniformsLength = timeUniforms.length;
 
 			const that = this;
-
+			const fps = 1000 / this.config.fps;
 			(function render() {
-				that._animationId = window.requestAnimationFrame(render);
+				setTimeout(() => {
+					that._animationId = window.requestAnimationFrame(render);
 
-				for (let i = 0; i < timeUniformsLength; i++) {
-					timeUniforms.value = that._clock.getElapsedTime();
-				}
+					for (let i = 0; i < timeUniformsLength; i++) {
+						timeUniforms.value = that._clock.getElapsedTime();
+					}
 
-				for (let i = 0; i < xTermMaterialsLength; i++) {
-					xTermMaterials[i].map.needsUpdate = true;
-				}
+					for (let i = 0; i < xTermMaterialsLength; i++) {
+						xTermMaterials[i].map.needsUpdate = true;
+					}
 
-				that._composer.render(that._clock.getDelta());
+					that._composer.render(that._clock.getDelta());
+				}, fps);
 			})();
 		}
 
