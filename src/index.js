@@ -331,10 +331,10 @@ class HyperPostProcessing {
 	}
 }
 
-const hyperPostProcessing = new HyperPostProcessing()
+let hyperPostProcessing
 
 exports.decorateTerms = (Terms, { React }) => {
-	class HyperPostProcessingTerms {
+	class HyperPostProcessingTerms extends React.Component {
 		constructor(...args) {
 			super(...args);
 
@@ -350,6 +350,7 @@ exports.decorateTerms = (Terms, { React }) => {
 				return;
 			}
 
+			hyperPostProcessing = new HyperPostProcessing()
 			this._terms = terms;
 		}
 
@@ -372,8 +373,8 @@ exports.decorateTerms = (Terms, { React }) => {
 
 
 
-exports.decorateTerms = (Term, { React }) => {
-	class HyperPostProcessingTerm {
+exports.decorateTerm = (Term, { React }) => {
+	class HyperPostProcessingTerm extends React.Component {
 		constructor(...args) {
 			super(...args);
 
@@ -390,26 +391,16 @@ exports.decorateTerms = (Term, { React }) => {
 			}
 
 			this._term = term;
-
-			if (!hyperPostProcessing._isInit) {
-				hyperPostProcessing._term = this._term
-				hyperPostProcessing._init()
-			}
+			hyperPostProcessing._initTerm(this._term)
 		}
 
-		/**
-		 * On tab switch, replace the source textures and
-		 * move the postprocessing canvas in the dom
-		 */
 		componentWillReceiveProps(props) {
-			if (!this._isInit) {
-				return;
-			}
+			// TODO understand when a term is not visible anymore (eg. user switches tab)
+		}
 
-			if (!this.props.isTermActive && props.isTermActive) {
-				hyperPostProcessing._term = this._term
-				hyperPostProcessing.updateTextures()
-				hyperPostProcessing.moveCanvas()
+		componentWillUnmount() {
+			if (this._isInit) {
+				hyperPostProcessing.destroyTerm(this._term);
 			}
 		}
 
@@ -421,6 +412,41 @@ exports.decorateTerms = (Term, { React }) => {
 	}
 
 	return HyperPostProcessingTerm;
+};
+
+
+exports.decorateSplitPane = (SplitPane, { React }) => {
+	class HyperPostProcessingSplitPane extends React.Component {
+		constructor(...args) {
+			super(...args);
+
+			this._onDecorated = this._onDecorated.bind(this);
+		}
+
+		_onDecorated(pane) {
+			if (this.props.onDecorated) {
+				this.props.onDecorated(pane);
+			}
+
+			if (!pane) {
+				return;
+			}
+
+			this._pane = pane;
+		}
+
+		componentWillReceiveProps(props) {
+			// TODO understand when a pane is not visible anymore (eg. user switches tab)
+		}
+
+		render() {
+			return React.createElement(SplitPane, Object.assign({}, this.props, {
+				onDecorated: this._onDecorated
+			}));
+		}
+	}
+
+	return HyperPostProcessingSplitPane;
 };
 
 
