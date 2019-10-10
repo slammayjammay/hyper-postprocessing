@@ -66,6 +66,11 @@ The entry file will be required at Hyper startup. The exported object will be pa
 
 4. A function that returns either option 1 or 2 or 3. An object containing the `hyperTerm` and `xTerm` instances will be passed to it.
 
+Additional options will be read from the exported object:
+- `fps`: the frame rate per second (defaults to 60fps)
+- `coordinateTransform`: a function that transforms mouse event coordinates ([see note about mouse events below](#mouse-events))
+- `three`+`postprocessing`: the dependencies to use ([see note about peer dependencies below](#a-note-about-dependencies))
+
 Note: if exporting a custom pass, make sure to export an object with the "pass" key pointing to the pass:
 ```js
 /* path-to-entry-file.js */
