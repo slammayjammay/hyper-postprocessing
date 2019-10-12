@@ -76,7 +76,7 @@ exports.decorateHyper = (Hyper, { React }) => {
 			}
 
 			this.activeTermGroupId = activeRootId;
-			this.activeTerms = this.getActiveTerms(state);
+			this.activeTerms = this.getVisibleTerms(state);
 
 			// setup newly created terms
 			this.activeTerms.forEach(term => {
@@ -97,9 +97,9 @@ exports.decorateHyper = (Hyper, { React }) => {
 			});
 		}
 
-		getActiveTerms(state) {
+		getVisibleTerms(state) {
 			const activeRootId = state.termGroups.activeRootGroup;
-			const activeTermIds = this.getActiveTermsIdsForRootId(state, activeRootId);
+			const activeTermIds = this.getVisibleTermsIdsForRootId(state, activeRootId);
 
 			return activeTermIds.map(id => {
 				const sessionId = state.termGroups.termGroups[id].sessionUid;
@@ -107,7 +107,7 @@ exports.decorateHyper = (Hyper, { React }) => {
 			});
 		}
 
-		getActiveTermsIdsForRootId(state, rootTermId) {
+		getVisibleTermsIdsForRootId(state, rootTermId) {
 			const ids = [];
 
 			const cdIntoTerm = (state, termId) => {
