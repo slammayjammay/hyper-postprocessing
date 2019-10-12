@@ -8,7 +8,7 @@ import requirePeer from './require-peer';
  * @param {Object} cbObj - Contains additional data that will be passed along
  * to the exported function.
  */
-export default (configPath, cbObj) => {
+export default (configPath, ...args) => {
 	let config;
 
 	try {
@@ -18,7 +18,7 @@ export default (configPath, cbObj) => {
 	}
 
 	if (typeof config === 'function') {
-		config = config(cbObj);
+		config = config(...args);
 	}
 
 	if (!config) {
@@ -30,7 +30,7 @@ export default (configPath, cbObj) => {
 		requirePeer.set('postprocessing', config.postprocessing);
 	}
 
-	const parsed = parseConfig(config, cbObj) || [];
+	const parsed = parseConfig(config, ...args) || [];
 
 	return {
 		passes: Array.isArray(parsed) ? parsed : [parsed],
@@ -39,7 +39,7 @@ export default (configPath, cbObj) => {
 	};
 }
 
-function parseConfig(config, cbObj) {
+function parseConfig(config) {
 	if (Array.isArray(config)) {
 		return loadFromArray(config);
 	}
