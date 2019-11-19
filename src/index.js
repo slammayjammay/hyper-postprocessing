@@ -104,9 +104,10 @@ exports.decorateTerm = (Term, { React }) => {
 			// set our canvas size and begin rendering
 			// i don't think there's a need to remove this listener
 			this._term.term.on('resize', () => {
-				const { offsetWidth: w, offsetHeight: h } = this._term.term.element;
+				const { offsetWidth: w, offsetHeight: h } = this._xTermScreen;
 				const dpRatio = window.devicePixelRatio;
 
+				this._renderer.setPixelRatio(dpRatio);
 				this._composer.setSize(w, h);
 
 				this._setUniforms({
