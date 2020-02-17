@@ -12,15 +12,14 @@ class XTermEffect {
 	 * mouse event coordinates.
 	 * @prop {number} [options.fps=60] - frame rate.
 	 */
-	constructor(xTerm, options) {
-		this.xTerm = xTerm;
+	constructor(options) {
 		this.options = options;
 
-		this._onCanvasReplacement = this._onCanvasReplacement.bind(this);
 		this._onResize = this._onResize.bind(this);
 		this._onMouseEvent = this._onMouseEvent.bind(this);
 
 		this._xTermScreen = null; // xterm's container for render layers
+		this._xTermScreenOpacity = null; // holds xTerm's opacity, which we will change to 0
 		this._xTermLayerMap = new Map(); // map for each render layer and the material we will create
 		this._animationId = null; // id of the next animation frame
 		this.canvas = null; // the canvas we will inject
@@ -28,38 +27,46 @@ class XTermEffect {
 
 		this.passes = []; // all of the passes for EffectComposer
 		this._shaderPasses = []; // a subset of all passes that are not an EffectPass
+
+		this.setup();
 	}
 
 	setup() {
 		THREE = requirePeer.get('three');
 		PP = requirePeer.get('postprocessing');
 
-		this._xTermScreen = this.xTerm._core.screenElement;
+		this.canvas = document.createElement('canvas');
+		this.canvas.classList.add('hyper-postprocessing', 'canvas');
 
-		const renderLayers = Array.from(this._xTermScreen.querySelectorAll('canvas'));
-		for (const canvas of renderLayers) {
-			canvas.style.opacity = 0;
-		}
-
-		const sortedLayers = this._sortLayers(renderLayers);
-		this._setupScene(sortedLayers);
 		this.clock = new THREE.Clock({ autoStart: false});
 
-		// store all our passes
-		this.passes = [new PP.RenderPass(this.scene, this.camera), ...this.options.passes];
-		this.passes[this.passes.length - 1].renderToScreen = true;
-		this.passes.forEach(pass => this.composer.addPass(pass));
-		this._shaderPasses = this.passes.slice(1).filter(pass => {
-			return (pass instanceof PP.Pass) && !(pass instanceof PP.EffectPass);
-		});
+		this.setupThree();
+		this.setupPostProcessing(this.options.passes);
+	}
 
-		// listen for any changes that happen inside XTerm's screen
-		this._layerObserver = new MutationObserver(this._onCanvasReplacement);
-		this._layerObserver.observe(this._xTermScreen, { childList: true });
+	attach(xTerm, reuseMeshes) {
+		this.xTerm = xTerm;
+		this._xTermScreen = this.xTerm._core.screenElement;
+
+		this._xTermScreenOpacity = this._xTermScreen.style.opacity;
+		this._xTermScreen.style.opacity = 0;
+
+		const xTermLayers = this.getSortedXTermLayers(this.xTerm);
+
+		if (!reuseMeshes || this.scene.children.length === 0) {
+			while (this.scene.children.length) {
+				this.scene.remove(this.scene.children[0]);
+			}
+			this._createMeshes(xTermLayers.length);
+		}
+
+		this.addTextures(xTermLayers);
+
+		this.xTerm.element.append(this.canvas);
 
 		if (typeof this.options.coordinateTransform === 'function') {
 			this._coordinateTransform = this.options.coordinateTransform;
-			for (const eventType of ['click', 'mousedown', 'mouseup', 'mousemove']) {
+			for (const eventType of this.getMouseEvents()) {
 				this._xTermScreen.addEventListener(eventType, this._onMouseEvent);
 			}
 		}
@@ -68,59 +75,85 @@ class XTermEffect {
 		this.readDimensions();
 	}
 
+	getXTermLayers(xTerm) {
+		const xTermScreen = xTerm._core.screenElement;
+		return Array.from(xTermScreen.querySelectorAll('canvas'));
+	}
+
+	getSortedXTermLayers(xTerm) {
+		const xTermLayers = this.getXTermLayers(xTerm);
+
+		const getZIndex = (element) => {
+			const { zIndex } = window.getComputedStyle(element);
+			return zIndex === 'auto' ? 0 : Number(zIndex);
+		};
+
+		const map = new Map(xTermLayers.map(el => [el, getZIndex(el)]));
+
+		return xTermLayers.sort((a, b) => map.get(a) - map.get(b));
+	}
+
+	getMouseEvents() {
+		return ['click', 'mousedown', 'mouseup', 'mousemove'];
+	}
+
 	/**
 	 * Boilerplate for threejs.
-	 *
-	 * @param {Iterable} renderLayers - The list of xTerm's render layers we
-	 * will use to create textures out of.
 	 */
-	_setupScene(renderLayers) {
-		const { offsetWidth, offsetHeight } = this.xTerm.element;
-
-		this.canvas = document.createElement('canvas');
-		this.canvas.classList.add('hyper-postprocessing', 'canvas');
-
-		// scene!
+	setupThree() {
 		this.scene = new THREE.Scene();
 
-		// renderer!
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
 			preserveDrawingBuffer: true,
 			alpha: true
 		});
 		this.renderer.setPixelRatio(window.devicePixelRatio);
-		this.renderer.setSize(offsetWidth, offsetHeight);
 
-		// camera!
-		const [w, h] = [offsetWidth / 2, offsetHeight / 2];
-		this.camera = new THREE.OrthographicCamera(-w, w, h, -h, 1, 1000);
+		this.camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 1, 1000);
 		this.camera.position.z = 1;
+	}
 
-		// composer!
+	setupPostProcessing(passes) {
 		this.composer = new PP.EffectComposer(this.renderer);
 
-		// xTerm textures!
-		let zOffset = -renderLayers.length;
-		for (const canvas of renderLayers) {
+		this.passes = [new PP.RenderPass(this.scene, this.camera), ...passes];
+		this.passes[this.passes.length - 1].renderToScreen = true;
+		this.passes.forEach(pass => this.composer.addPass(pass));
+		this._shaderPasses = this.passes.slice(1).filter(pass => {
+			return (pass instanceof PP.Pass) && !(pass instanceof PP.EffectPass);
+		});
+	}
+
+	_createMeshes(numLayers) {
+		for (let i = 0; i < numLayers; i++) {
+			const geometry = new THREE.PlaneGeometry(1, 1);
+			const material = new THREE.MeshBasicMaterial({ transparent: true });
+			const mesh = new THREE.Mesh(geometry, material);
+
+			mesh.position.z = -numLayers + i;
+
+			this.scene.add(mesh);
+		}
+	}
+
+	addTextures(xTermLayers) {
+		xTermLayers = xTermLayers || this.getSortedXTermLayers(this.xTerm);
+
+		if (xTermLayers.length !== this.scene.children.length) {
+			console.warn('hyper-postprocessing error: number of meshes does not equal number of render layers...');
+		}
+
+		for (const [idx, canvas] of xTermLayers.entries()) {
 			const texture = new THREE.CanvasTexture(canvas);
 			texture.minFilter = THREE.LinearFilter;
 
-			const geometry = new THREE.PlaneGeometry(offsetWidth, offsetHeight);
-			const material = new THREE.MeshBasicMaterial({
-				color: 0xFFFFFF,
-				map: texture,
-				transparent: true
-			});
-			const mesh = new THREE.Mesh(geometry, material);
-			mesh.position.z = ++zOffset;
+			const mesh = this.scene.children[idx];
 
-			this.scene.add(mesh);
-			this._xTermLayerMap.set(canvas, material);
+			mesh.material.map = texture;
+
+			this._xTermLayerMap.set(canvas, mesh);
 		}
-
-		// add the element to the page
-		this.xTerm.element.append(this.renderer.domElement);
 	}
 
 	_onResize() {
@@ -163,26 +196,6 @@ class XTermEffect {
 		}
 	}
 
-	/**
-	 * Sort correctly the renderLayers so the cursor texture is always
-	 * on top when we render it.
-	 *
-	 * @param {Iterable} renderLayers - The list of xTerm's render layers we
-	 * need to sort.
-	 */
-	_sortLayers(renderLayers) {
-		function zIndex(element) {
-			const { zIndex } = window.getComputedStyle(element);
-			return zIndex === 'auto' ? 0 : Number(zIndex);
-		}
-
-		renderLayers.sort((a, b) => {
-			return zIndex(a) - zIndex(b);
-		});
-
-		return renderLayers;
-	}
-
 	_onMouseEvent(e) {
 		if (e.syntethic) {
 			return;
@@ -219,7 +232,7 @@ class XTermEffect {
 			return;
 		}
 
-		const xTermMaterials = Array.from(this._xTermLayerMap.values());
+		const xTermMaterials = Array.from(this._xTermLayerMap.values()).map(m => m.material);
 		const timeUniforms = this._shaderPasses.filter(pass => {
 			return pass.getFullscreenMaterial().uniforms.time !== undefined;
 		}).map(pass => {
@@ -232,6 +245,7 @@ class XTermEffect {
 		const that = this;
 		const fps = 1000 / this.options.fps;
 		let lastRenderTime = fps;
+
 		(function render() {
 			that._animationId = window.requestAnimationFrame(render);
 
@@ -259,67 +273,47 @@ class XTermEffect {
 	}
 
 	/**
-	 * XTerm sometimes removes and replaces render layer canvases. afaik there
-	 * isn't an event that fires when this happens (i think it only happens
-	 * when Terminal#setTransparency is called). this function is the callback
-	 * for a MutationObserver that observes `.xterm-screen` whenever the
-	 * childList changes.
+	 * Disassociates the xterm effect from xTerm.
 	 */
-	_onCanvasReplacement([e]) {
-		const { removedNodes, addedNodes } = e;
-		for (let i = 0; i < removedNodes.length; i++) {
-			this._replaceTexture(removedNodes[i], addedNodes[i]);
-		}
-	}
-
-	_replaceTexture(removedCanvas, addedCanvas) {
-		const affectedMaterial = this._xTermLayerMap.get(removedCanvas);
-		const newTexture = new THREE.CanvasTexture(addedCanvas);
-		newTexture.minFilter = THREE.LinearFilter;
-
-		affectedMaterial.map.dispose();
-		affectedMaterial.map = newTexture;
-	}
-
-	/**
-	 * Garbage collection.
-	 */
-	destroy() {
-		const renderLayers = Array.from(this._xTermScreen.querySelectorAll('canvas'));
-		for (const canvas of renderLayers) {
-			canvas.style.opacity = '';
+	detach() {
+		if (!this.xTerm) {
+			return;
 		}
 
 		this.cancelAnimationLoop();
 		this.clock.stop();
+		this.canvas.remove();
 
-		while (this.scene.children.length > 0) {
-			const mesh = this.scene.children[0];
-			this.scene.remove(mesh);
+		this._xTermScreen.style.opacity = this._xTermScreenOpacity;
+		this._xTermScreenOpacity = null;
 
-			mesh.material.map.dispose();
-			mesh.material.dispose();
-			mesh.geometry.dispose();
+		this.xTerm.off('resize', this._onResize);
+
+		for (const eventType of this.getMouseEvents()) {
+			this._xTermScreen.removeEventListener(eventType, this._onMouseEvent);
 		}
 
-		this._layerObserver.disconnect();
-		this.canvas.remove();
-		this.composer.dispose();
+		for (const [canvas, mesh] of this._xTermLayerMap.entries()) {
+			mesh.material.map.dispose();
+		}
 
+		this.xTerm = this._xTermScreen = null;
+	}
+
+	destroy() {
+		this.detach();
+
+		this.composer.dispose();
 		this.renderer.dispose();
 		this.renderer.forceContextLoss();
-		this.renderer.context = null;
-		this.renderer.domElement = null;
 
-
-		this._onCanvasReplacement = this._onResize = this._onMouseEvent = null;
-
+		this._xTermLayerMap.clear();
 		this.xTerm = this.options = null;
 		this.passes = this._shaderPasses = null;
 		this.canvas = null;
 		this.clock = this.scene = this.renderer = this.camera = this.composer = null;
 		this._xTermScreen = null;
-		this._layerObserver = this._xTermLayerMap = null;
+		this._xTermLayerMap = null;
 	}
 }
 

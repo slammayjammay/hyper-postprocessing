@@ -15,8 +15,6 @@ exports.decorateHyper = (Hyper, { React }) => {
 
 			this._hyper = null;
 			this.map = new Map();
-			this.activeTermGroupId = null;
-			this.activeTerms = [];
 
 			const userConfig = window.config.getConfig().hyperPostprocessing || {};
 			this.config = Object.assign({}, CONFIG_DEFAULTS, userConfig);
@@ -47,54 +45,53 @@ exports.decorateHyper = (Hyper, { React }) => {
 		}
 
 		componentDidUpdate() {
-			setTimeout(() => this.sync());
+			if (this._isInit) {
+				setTimeout(() => this.sync());
+			}
 		}
 
+		/**
+		 * Reads from the state and creates an XTermEffect for all visible terms,
+		 * if one isn't created already.
+		 *
+		 * `xTerm` refers to the literal xTerm instance.
+		 * `term` refers to Hyper's wrapper object around it.
+		 * `term.term` is a pointer to `xTerm`.
+		 */
 		sync() {
 			const state = window.store.getState();
-			const activeRootId = state.termGroups.activeRootGroup;
-			const allIds = Object.keys(state.sessions.sessions);
+			const visibleXTerms = new Set(this.getVisibleTerms(state).map(t => t.term));
 
-			const numTermsChanged = allIds.length !== this.map.size;
-			const didActiveGroupChange = activeRootId !== this.activeTermGroupId;
+			const unusedXTermEffects = [];
 
-			// stop render loop for non-visible terms
-			if (didActiveGroupChange) {
-				this.activeTerms.forEach(term => {
-					const { xTermEffect } = this.map.get(term.props.uid);
-					xTermEffect.cancelAnimationLoop();
-				});
+			for (const [xTerm, xTermEffect] of this.map.entries()) {
+				if (!visibleXTerms.has(xTerm)) {
+					unusedXTermEffects.push(xTermEffect);
+				}
 			}
 
-			// destroy terms that don't exist anymore
-			if (numTermsChanged) {
-				for (const id of this.map.keys()) {
-					if (!state.sessions.sessions[id]) {
-						this.destroySessionId(id);
+			for (const xTerm of visibleXTerms) {
+				if (!this.map.has(xTerm)) {
+					let xTermEffect;
+					const canReuse = unusedXTermEffects.length > 0;
+
+					if (canReuse) {
+						xTermEffect = unusedXTermEffects.pop();
+						this.map.delete(xTermEffect.xTerm);
+						xTermEffect.detach();
+					} else {
+						xTermEffect = new XTermEffect(loadConfig(this.config.entry));
 					}
+
+					this.map.set(xTerm, xTermEffect);
+					xTermEffect.attach(xTerm, canReuse);
+					xTermEffect.startAnimationLoop();
 				}
 			}
 
-			this.activeTermGroupId = activeRootId;
-			this.activeTerms = this.getVisibleTerms(state);
-
-			// setup newly created terms
-			this.activeTerms.forEach(term => {
-				if (!this.map.has(term.props.uid)) {
-					const id = term.props.uid;
-					const xTermEffect = new XTermEffect(term.term, this.parsedEntry);
-					this.map.set(id, { term, xTermEffect });
-
-					xTermEffect.setup();
-				}
-			});
-
-			// begin render loop for visible terms
-			this.activeTerms.forEach(term => {
-				const { xTermEffect } = this.map.get(term.props.uid);
-				xTermEffect.readDimensions();
-				xTermEffect.startAnimationLoop();
-			});
+			for (const xTermEffect of unusedXTermEffects) {
+				this.destroyXTermEffect(xTermEffect);
+			}
 		}
 
 		getVisibleTerms(state) {
@@ -134,26 +131,9 @@ exports.decorateHyper = (Hyper, { React }) => {
 			return ids;
 		}
 
-		destroySessionId(id) {
-			if (!this.map.has(id)) {
-				return;
-			}
-
-			const { xTermEffect } = this.map.get(id);
-
+		destroyXTermEffect(xTermEffect) {
+			this.map.delete(xTermEffect.xTerm);
 			xTermEffect.destroy();
-			this.map.delete(id);
-			return true;
-		}
-
-		destroyXTermEffect(effect) {
-			for (const [id, { xTermEffect }] of this.map.entries()) {
-				if (xTermEffect === effect) {
-					return this.destroySessionId(id);
-				}
-			}
-
-			return false;
 		}
 
 		render() {
@@ -179,7 +159,6 @@ exports.decorateHyper = (Hyper, { React }) => {
 			this._hyper = null;
 			this._isInit = null;
 			this.map = null;
-			this.activeTermGroupId = this.activeTerms = null;
 
 			this.config = this.parsedEntry = null;
 		}
