@@ -18,7 +18,6 @@ exports.decorateHyper = (Hyper, { React }) => {
 
 			const userConfig = window.config.getConfig().hyperPostprocessing || {};
 			this.config = Object.assign({}, CONFIG_DEFAULTS, userConfig);
-			this.parsedEntry = null;
 		}
 
 		_onDecorated(hyper) {
@@ -35,9 +34,9 @@ exports.decorateHyper = (Hyper, { React }) => {
 		}
 
 		_init() {
-			this.parsedEntry = loadConfig(this.config.entry);
+			const config = loadConfig(this.config.entry);
 
-			if (!this.parsedEntry || this.parsedEntry.passes.length === 0) {
+			if (!config || config.passes.length === 0) {
 				return;
 			}
 
@@ -153,14 +152,7 @@ exports.decorateHyper = (Hyper, { React }) => {
 				this.destroySessionId(id);
 			}
 			this.map.clear();
-
-			this._onDecorated = null;
-
-			this._hyper = null;
-			this._isInit = null;
-			this.map = null;
-
-			this.config = this.parsedEntry = null;
+			this._hyper = this._isInit = this.map = this.config = null;
 		}
 	}
 
@@ -172,10 +164,6 @@ exports.decorateConfig = (config) => {
 	return Object.assign({}, config, {
 		css: `
 		${config.css || ''}
-
-		.term_term {
-			position: relative;
-		}
 
 		.hyper-postprocessing.canvas {
 			position: absolute;
