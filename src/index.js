@@ -25,28 +25,15 @@ exports.decorateHyper = (Hyper, { React }) => {
 				this.props.onDecorated(hyper);
 			}
 
-			if (!this.config.entry || this._isInit) {
+			if (!this.config.entry) {
 				return;
 			}
 
 			this._hyper = hyper;
-			this._init();
-		}
-
-		_init() {
-			const config = loadConfig(this.config.entry);
-
-			if (!config || config.passes.length === 0) {
-				return;
-			}
-
-			this._isInit = true;
 		}
 
 		componentDidUpdate() {
-			if (this._isInit) {
-				setTimeout(() => this.sync());
-			}
+			setTimeout(() => this.sync());
 		}
 
 		/**
@@ -79,12 +66,20 @@ exports.decorateHyper = (Hyper, { React }) => {
 						this.map.delete(xTermEffect.xTerm);
 						xTermEffect.detach();
 					} else {
-						xTermEffect = new XTermEffect(loadConfig(this.config.entry));
+						const options = loadConfig(this.config.entry, {
+							hyperTerm: this._hyper,
+							xTerm
+						});
+						if (options.passes.length > 0) {
+							xTermEffect = new XTermEffect(options);
+						}
 					}
 
-					this.map.set(xTerm, xTermEffect);
-					xTermEffect.attach(xTerm, canReuse);
-					xTermEffect.startAnimationLoop();
+					if (xTermEffect) {
+						this.map.set(xTerm, xTermEffect);
+						xTermEffect.attach(xTerm, canReuse);
+						xTermEffect.startAnimationLoop();
+					}
 				}
 			}
 
@@ -142,9 +137,7 @@ exports.decorateHyper = (Hyper, { React }) => {
 		}
 
 		componentWillUnmount() {
-			if (this._isInit) {
-				this.destroy();
-			}
+			this.destroy();
 		}
 
 		destroy() {
@@ -152,7 +145,7 @@ exports.decorateHyper = (Hyper, { React }) => {
 				this.destroySessionId(id);
 			}
 			this.map.clear();
-			this._hyper = this._isInit = this.map = this.config = null;
+			this._hyper = this.map = this.config = null;
 		}
 	}
 

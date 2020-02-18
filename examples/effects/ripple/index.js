@@ -34,5 +34,5 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		{ blendFunction: BlendFunction.NORMAL }
 	));
 
-	return { pass: new EffectPass(null, ...effects) };
+	return { passes: [new EffectPass(null, ...effects)] };
 };

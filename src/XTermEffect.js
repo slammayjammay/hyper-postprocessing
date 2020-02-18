@@ -4,7 +4,6 @@ let THREE, PP;
 
 class XTermEffect {
 	/**
-	 * @param {Xterm} xTerm - instance of xTerm
 	 * @param {object} options
 	 * @prop {array<ShaderPass|EffectPass>} options.passes - array of
 	 * `postprocessing` passes that will be passed to EffectComposer.

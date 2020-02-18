@@ -3,13 +3,14 @@ const { resolve } = require('path');
 const { EffectPass, Effect, BlendFunction } = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
-
-	return { 
-		pass: new EffectPass(null, new Effect(
-			'vt220',
-			readFileSync(resolve(__dirname, '../../glsl/vt220.glsl')).toString(),
-			{ blendFunction: BlendFunction.NORMAL },
-		)),
+	return {
+		passes: [
+			new EffectPass(null, new Effect(
+				'vt220',
+				readFileSync(resolve(__dirname, '../../glsl/vt220.glsl')).toString(),
+				{ blendFunction: BlendFunction.NORMAL },
+			))
+		],
 		coordinateTransform: function(x, y) {
 			let r = 4;
 			x = (x - 0.5) * 2;

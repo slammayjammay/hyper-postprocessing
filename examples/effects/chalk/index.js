@@ -17,5 +17,5 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		effect.uniforms.get('noiseTexture').value = texture;
 	});
 
-	return { pass: new EffectPass(null, effect) };
+	return { passes: [new EffectPass(null, effect)] };
 };

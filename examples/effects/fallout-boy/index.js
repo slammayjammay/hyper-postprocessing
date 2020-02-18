@@ -28,5 +28,5 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		backgroundEffect.uniforms.get('backgroundImage').value = texture;
 	});
 
-	return { pass: new EffectPass(null, textEffect, backgroundEffect) };
+	return { passes: [new EffectPass(null, textEffect, backgroundEffect)] };
 };

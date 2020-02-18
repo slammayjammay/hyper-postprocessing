@@ -9,5 +9,5 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		{ blendFunction: BlendFunction.NORMAL }
 	);
 
-	return { pass: new EffectPass(null, filmEffect) };
+	return { passes: [new EffectPass(null, filmEffect)] };
 };

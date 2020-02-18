@@ -34,8 +34,10 @@ module.exports = ({ hyperTerm, xTerm }) => {
 		distinction: -0.5
 	}));
 
-	return [
-		{ pass: new EffectPass(null, ...scaleEffects) },
-		{ pass: new EffectPass(null, ...spaceEffects) }
-	];
+	return {
+		passes: [
+			new EffectPass(null, ...scaleEffects),
+			new EffectPass(null, ...spaceEffects)
+		]
+	};
 };
