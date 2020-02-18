@@ -41,14 +41,12 @@ In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugi
 ```js
 module.exports = {
 	config: {
-		// ...,
 		hyperPostprocessing: {
 			// defaults to `${HOME}/.hyper-postprocessing.js`
 			entry: 'path-to-entry-file.js'
 		}
 	},
 	plugins: [
-		// ...,
 		'hyper-postprocessing'
 	]
 }
@@ -56,59 +54,36 @@ module.exports = {
 
 ### Entry file
 
-The entry file will be required at Hyper startup. The exported object will be parsed and passed to [`postprocessing`](https://github.com/vanruesc/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki) is highly recommended to understand how the Effect Composer works. Any one of these options is acceptable:
+The entry file will be imported at Hyper startup, and must export a function. The function will return an object that will be parsed and passed to [postprocessing](https://github.com/vanruesc/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki) is highly recommended to understand how the `EffectComposer` works.
 
-1. A string, assumed to be a fragment shader. An [Effect](https://github.com/vanruesc/postprocessing/wiki/Custom-Effects) will be created with the given string, and will then be incorporated into an [EffectPass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/EffectPass.js~EffectPass.html).
+The returned object can have the following options:
+- `passes` (required): array of fragment shader strings (adjacent strings will be incorporated into one `EffectPass`) or valid instances of a postprocessing `Pass` that will be used in `EffectComposer`.
 
-2. An object specifying `vertexShader`, `fragmentShader`, `pass`, or `passes`. If `fragmentShader` is present, the same steps in option 1 will be taken, giving `vertexShader` if present. If `pass` or `passes` is present, those passes will be added to the EffectComposer (must be valid instances of a [postprocessing Pass](https://vanruesc.github.io/postprocessing/public/docs/class/src/passes/Pass.js~Pass.html)).
+- `fps` (default: 60): the frame rate per second
 
-3. An array of options 1 or 2. If the array contains multiple adjacent strings, they will all be combined into one EffectPass. If the array given contains both strings and objects, only strings adjacent to one another will be combined.
+- `coordinateTransform` (optional): a function that transforms mouse event coordinates ([see note about mouse events below](#mouse-events))
 
-4. A function that returns either option 1 or 2 or 3. An object containing the `hyperTerm` and `xTerm` instances will be passed to it.
+- `three`+`postprocessing` (optional): the dependencies to use ([see note about peer dependencies below](#a-note-about-dependencies))
 
-Additional options will be read from the exported object:
-- `fps`: the frame rate per second (defaults to 60fps)
-- `coordinateTransform`: a function that transforms mouse event coordinates ([see note about mouse events below](#mouse-events))
-- `three`+`postprocessing`: the dependencies to use ([see note about peer dependencies below](#a-note-about-dependencies))
-
-Note: if exporting a custom pass, make sure to export an object with the "pass" key pointing to the pass:
-```js
-/* path-to-entry-file.js */
-const customPass = new CustomPass();
-
-// module.exports = customPass; // no!
-module.exports = { pass: customPass };
-```
-
-or if exporting a function:
-```js
-/* path-to-entry-file.js */
-module.exports = ({ hyperTerm, xTerm }) => {
-  const customPass = new CustomPass();
-
-  // return customPass; // no!
-  return { pass: customPass };
-};
-```
-
-Do not export the initial `RenderPass` that `EffectComposer` requires. This is done automatically.
-
+Do not include the initial `RenderPass` that `EffectComposer` requires. This is done automatically.
 
 #### Mouse events
-If your effects reposition any content inside the terminal, then mouse events will not be in sync with terminal visuals. You can optionally provide a `coordinateTransform` function in the exported object to change the coordinates of mouse events.
+If your effects reposition any content inside the terminal, then mouse events will not be in sync with terminal visuals. You can optionally provide a `coordinateTransform` function to change the coordinates of mouse events.
 
 ```js
 /* path-to-entry-file.js */
-module.exports = {
-  fragmentShader: `
-  void mainUv(inout vec2 uv) {
-    uv.x = 1.0 - uv.x;
-  }
-  `,
-  coordinateTransform: function(x, y) {
-    return [1 - x, y];
-  }
-};
+module.exports = () => {
+  return {
+    passes: [
+      `void mainUv(inout vec2 uv) {
+        uv.x = 1.0 - uv.x;
+      }`
+    ],
+    coordinateTransform: function(x, y) {
+      return [1 - x, y];
+    }
+  };
+}
 ```
 
 `coordinateTransform` will take in the x and y values of the mouse event, and return a tuple containing the modified values for each. The original mouse event will be prevented and stopped, and a new event will be fired at the new location.
@@ -132,18 +107,18 @@ EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These 
 ## A note about dependencies
 This plugin comes bundled with `three` and `postprocessing` as dependencies in order to work upon installation, however those should be viewed more as peer dependencies -- if your entry file makes use of either of them you should install them yourself.
 
-By default this plugin uses `postprocessing` v6.2.1 and its compatible version of `three` (v0.103.0), but can use other versions of those if needed. To do this you will need your entry file to export an object (or a function that returns an object) with a key of the dependency name and the value as the `require`'d dependency.
-
-For example if you want to use `postprocessing` version X.X.X (and its hypothetically compatible version of `three` Y.Y.Y):
+By default this plugin uses `postprocessing` v6.10.0 and its compatible version of `three` (v0.112.1), but can use other versions of those if needed. To do this you can add the versions of `three`/`postprocessing` to the returned object from the entry file:
 
 ```js
 /* path-to-entry-file.js */
-const pp = require('postprocessing'); // version X.X.X
-const three = require('three'); // version Y.Y.Y
+const three = require('three'); // vX.X.X
+const pp = require('postproessing'); // vY.Y.Y
 
-module.exports = {
-  pass: pp.EffectPass(null, new pp.VignetteEffect()),
-  postprocessing: pp,
-  three: three
+module.exports = () => {
+  return {
+    passes: [new pp.EffectPass(null, new pp.VignetteEffect())],
+    three: three,
+    postprocessing: pp
+  };
 };
 ```
