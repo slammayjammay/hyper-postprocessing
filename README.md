@@ -54,7 +54,7 @@ module.exports = {
 
 ### Entry file
 
-The entry file will be imported at Hyper startup, and must export a function. The function will return an object that will be parsed and passed to [postprocessing](https://github.com/vanruesc/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki) is highly recommended to understand how the `EffectComposer` works.
+The entry file will be imported at Hyper startup, and must export a function that returns an object. Every time a new tab or pane is opened, the function will be called and the object will be parsed and passed to [postprocessing](https://github.com/vanruesc/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki) is highly recommended to understand how the `EffectComposer` works.
 
 The returned object can have the following options:
 - `passes` (required): array of fragment shader strings (adjacent strings will be incorporated into one `EffectPass`) or valid instances of a postprocessing `Pass` that will be used in `EffectComposer`.
@@ -66,6 +66,40 @@ The returned object can have the following options:
 - `three`+`postprocessing` (optional): the dependencies to use ([see note about peer dependencies below](#a-note-about-dependencies))
 
 Do not include the initial `RenderPass` that `EffectComposer` requires. This is done automatically.
+
+#### Careful of shared instances
+
+Make sure that each pass instance is created every time the exported function is called, so that each tab/pane's effects are self-contained. Otherwise a single pass could be used in multiple contexts, and its properties could become overwritten and inaccurate.
+
+<details>
+<summary>Example</summary>
+
+Bad -- one pass will be used for all tabs/panes.
+
+```js
+/* path-to-entry-file.js */
+const pass = new MyPass();
+
+module.exports = () => {
+  return {
+    passes: [pass]
+  };
+}
+```
+
+Good -- no shared passes.
+
+```js
+/* path-to-entry-file.js */
+module.exports = () => {
+  const pass = new MyPass();
+
+  return {
+    passes: [pass]
+  };
+}
+```
+</details>
 
 #### Mouse events
 If your effects reposition any content inside the terminal, then mouse events will not be in sync with terminal visuals. You can optionally provide a `coordinateTransform` function to change the coordinates of mouse events.

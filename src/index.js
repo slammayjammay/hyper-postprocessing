@@ -1,5 +1,6 @@
 import { homedir } from 'os';
 import loadConfig from './load-config';
+import requirePeer from './require-peer';
 import XTermEffect from './XTermEffect';
 
 const CONFIG_DEFAULTS = {
@@ -61,25 +62,30 @@ exports.decorateHyper = (Hyper, { React }) => {
 					let xTermEffect;
 					const canReuse = unusedXTermEffects.length > 0;
 
+					const options = loadConfig(this.config.entry, {
+						hyperTerm: this._hyper,
+						xTerm
+					});
+
+					if (options.passes.length === 0) {
+						continue;
+					}
+
+					XTermEffect.THREE = requirePeer.get('three');
+					XTermEffect.PP = requirePeer.get('postprocessing');
+
 					if (canReuse) {
 						xTermEffect = unusedXTermEffects.pop();
 						this.map.delete(xTermEffect.xTerm);
 						xTermEffect.detach();
+						xTermEffect.setPasses(options.passes);
 					} else {
-						const options = loadConfig(this.config.entry, {
-							hyperTerm: this._hyper,
-							xTerm
-						});
-						if (options.passes.length > 0) {
-							xTermEffect = new XTermEffect(options);
-						}
+						xTermEffect = new XTermEffect(options);
 					}
 
-					if (xTermEffect) {
-						this.map.set(xTerm, xTermEffect);
-						xTermEffect.attach(xTerm, canReuse);
-						xTermEffect.startAnimationLoop();
-					}
+					xTermEffect.attach(xTerm, canReuse);
+					xTermEffect.startAnimationLoop();
+					this.map.set(xTerm, xTermEffect);
 				}
 			}
 
