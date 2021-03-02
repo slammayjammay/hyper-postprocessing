@@ -141,7 +141,7 @@ EffectPasses also gain additional uniforms, courtesy of `postprocessing`. These 
 ## A note about dependencies
 This plugin comes bundled with `three` and `postprocessing` as dependencies in order to work upon installation, however those should be viewed more as peer dependencies -- if your entry file makes use of either of them you should install them yourself.
 
-By default this plugin uses `postprocessing` v6.10.0 and its compatible version of `three` (v0.112.1), but can use other versions of those if needed. To do this you can add the versions of `three`/`postprocessing` to the returned object from the entry file:
+By default this plugin uses `postprocessing` v6.10.0 and its compatible version of `three` (v0.125.0), but can use other versions of those if needed. To do this you can add the versions of `three`/`postprocessing` to the returned object from the entry file:
 
 ```js
 /* path-to-entry-file.js */
