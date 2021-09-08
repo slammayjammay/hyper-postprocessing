@@ -114,7 +114,7 @@ class XTermEffect {
 			}
 		}
 
-		this.xTerm.on('resize', this._onResize);
+		this.xTerm.onResize(this._onResize);
 		this.readDimensions();
 	}
 

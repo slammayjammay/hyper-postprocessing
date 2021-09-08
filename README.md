@@ -36,6 +36,11 @@ Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term).
 [5]: https://user-images.githubusercontent.com/11801881/40855047-23c12546-6588-11e8-92a4-13d475afc5cd.gif
 [6]: https://user-images.githubusercontent.com/11801881/46054056-5bd76580-c0fa-11e8-95c2-e8dc6a2040e5.gif
 
+## Note:
+For the latest Hyper version (3.1.0 and above), use hyper-postprocessing v4.
+
+For previous Hyper versions <= 3.0.2, use hyper-postprocessing 3.0.2.
+
 ## How to setup
 In your `.hyper.js` config file, add `hyper-postprocessing` to the list of plugins. Then to specify options for this plugin, add a key `hyperPostprocessing` inside the `config` entry:
 ```js
