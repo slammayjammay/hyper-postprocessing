@@ -1,14 +1,15 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const { EffectPass, Effect, BlendFunction } = require('postprocessing');
+const three = require('three');
+const postprocessing = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	return {
 		passes: [
-			new EffectPass(null, new Effect(
+			new postprocessing.EffectPass(null, new postprocessing.Effect(
 				'vt220',
 				readFileSync(resolve(__dirname, '../../glsl/vt220.glsl')).toString(),
-				{ blendFunction: BlendFunction.NORMAL },
+				{ blendFunction: postprocessing.BlendFunction.NORMAL },
 			))
 		],
 		coordinateTransform: function(x, y) {
@@ -24,6 +25,8 @@ module.exports = ({ hyperTerm, xTerm }) => {
 
 			return [x, y];
 		},
+		three,
+		postprocessing
 	};
 };
 

@@ -1,38 +1,42 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const { TextureLoader, LinearFilter, Uniform } = require('three');
-const { EffectPass, Effect, BlendFunction } = require('postprocessing');
+const three = require('three');
+const postprocessing = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	const effects = [];
 
-	const backgroundEffect = new Effect(
+	const backgroundEffect = new postprocessing.Effect(
 		'backgroundImage',
 		readFileSync(resolve(__dirname, '../../glsl/background-image.glsl')).toString(),
-		{ uniforms: new Map([['backgroundImage', new Uniform(null)]]) }
+		{ uniforms: new Map([['backgroundImage', new three.Uniform(null)]]) }
 	);
-	new TextureLoader().load(resolve(__dirname, '../../images/underwater.jpg'), texture => {
-		texture.minFilter = LinearFilter;
+	new three.TextureLoader().load(resolve(__dirname, '../../images/underwater.jpg'), texture => {
+		texture.minFilter = three.LinearFilter;
 		backgroundEffect.uniforms.get('backgroundImage').value = texture;
 	});
 	effects.push(backgroundEffect);
 
-	effects.push(new Effect(
+	effects.push(new postprocessing.Effect(
 		'underwaterEffect',
 		readFileSync(resolve(__dirname, '../../glsl/ripple.glsl')).toString()
 	));
 
-	effects.push(new Effect(
+	effects.push(new postprocessing.Effect(
 		'scaleEffect',
 		readFileSync(resolve(__dirname, '../../glsl/scale.glsl')).toString(),
 		{ defines: new Map([['scale', '0.9']]) }
 	));
 
-	effects.push(new Effect(
+	effects.push(new postprocessing.Effect(
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
-		{ blendFunction: BlendFunction.NORMAL }
+		{ blendFunction: postprocessing.BlendFunction.NORMAL }
 	));
 
-	return { passes: [new EffectPass(null, ...effects)] };
+	return {
+		passes: [new postprocessing.EffectPass(null, ...effects)],
+		three,
+		postprocessing
+	};
 };

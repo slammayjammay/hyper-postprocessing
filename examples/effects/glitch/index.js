@@ -1,49 +1,44 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const { Vector2 } = require('three');
-const {
-	EffectPass,
-	Effect,
-	GlitchEffect,
-	BloomEffect,
-	ScanlineEffect,
-	SepiaEffect,
-	VignetteEffect,
-	BlendFunction
-} = require('postprocessing');
+const three = require('three');
+const postprocessing = require('postprocessing');
 
 module.exports = ({ hyperTerm, xTerm }) => {
 	const effects = [];
 
-	effects.push(new GlitchEffect({
-		delay: new Vector2(1, 7),
-		duration: new Vector2(0, 1),
+	effects.push(new postprocessing.GlitchEffect({
+		delay: new three.Vector2(1, 7),
+		duration: new three.Vector2(0, 1),
 		columns: 0.05
 	}));
 
-	effects.push(new BloomEffect({
+	effects.push(new postprocessing.BloomEffect({
 		kernelSize: 3,
 		distinction: 1,
-		blendFunction: BlendFunction.ADD
+		blendFunction: postprocessing.BlendFunction.ADD
 	}));
 
-	effects.push(new ScanlineEffect({ density: 1.3 }));
-	effects.push(new SepiaEffect({ intensity: 0.5 }));
-	effects.push(new VignetteEffect({
+	effects.push(new postprocessing.ScanlineEffect({ density: 1.3 }));
+	effects.push(new postprocessing.SepiaEffect({ intensity: 0.5 }));
+	effects.push(new postprocessing.VignetteEffect({
 		darkness: 0.6,
 		offset: 0
 	}));
 
-	effects.push(new Effect(
+	effects.push(new postprocessing.Effect(
 		'curvedMonitorEffect',
 		readFileSync(resolve(__dirname, '../../glsl/curved-monitor.glsl')).toString()
 	));
 
-	effects.push(new Effect(
+	effects.push(new postprocessing.Effect(
 		'sampling',
 		readFileSync(resolve(__dirname, '../../glsl/sampling.glsl')).toString(),
-		{ blendFunction: BlendFunction.NORMAL }
+		{ blendFunction: postprocessing.BlendFunction.NORMAL }
 	));
 
-	return { passes: [new EffectPass(null, ...effects)] };
+	return {
+		passes: [new postprocessing.EffectPass(null, ...effects)],
+		three,
+		postprocessing
+	};
 };
