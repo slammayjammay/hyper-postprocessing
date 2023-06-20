@@ -29,7 +29,8 @@ float sum2(vec2 v) {
 }
 
 float rgb2grey(vec3 v){
-	return dot(v, vec3(0.21, 0.72, 0.04));
+	float dp = dot(v, vec3(0.21, 0.72, 0.04));
+	return dp == 0.0 ? 0.00001 : dp;
 }
 
 float randomPass(vec2 coords) {
