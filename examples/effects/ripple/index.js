@@ -9,7 +9,10 @@ module.exports = ({ hyperTerm, xTerm }) => {
 	const backgroundEffect = new postprocessing.Effect(
 		'backgroundImage',
 		readFileSync(resolve(__dirname, '../../glsl/background-image.glsl')).toString(),
-		{ uniforms: new Map([['backgroundImage', new three.Uniform(null)]]) }
+		{
+			uniforms: new Map([['backgroundImage', new three.Uniform(null)]]),
+			blendFunction: postprocessing.BlendFunction.SCREEN
+		}
 	);
 	new three.TextureLoader().load(resolve(__dirname, '../../images/underwater.jpg'), texture => {
 		texture.minFilter = three.LinearFilter;

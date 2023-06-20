@@ -26,7 +26,8 @@ module.exports = ({ hyperTerm, xTerm }) => {
 	// space
 	spaceEffects.push(new postprocessing.Effect(
 		'space',
-		readFileSync(resolve(__dirname, '../../glsl/space-travel.glsl')).toString()
+		readFileSync(resolve(__dirname, '../../glsl/space-travel.glsl')).toString(),
+		{ blendFunction: postprocessing.BlendFunction.SCREEN }
 	));
 
 	// bloom
