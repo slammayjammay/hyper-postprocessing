@@ -59,7 +59,7 @@ module.exports = {
 
 ### Entry file
 
-The entry file will be imported at Hyper startup, and must export a function that returns an object. Every time a new tab or pane is opened, the function will be called and the object will be parsed and passed to [postprocessing](https://github.com/vanruesc/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/vanruesc/postprocessing/wiki) is highly recommended to understand how the `EffectComposer` works.
+The entry file will be imported at Hyper startup, and must export a function that returns an object. Every time a new tab or pane is opened, the function will be called and the object will be parsed and passed to [postprocessing](https://github.com/pmndrs/postprocessing), which handles all effect rendering. Reading the [postprocessing wiki](https://github.com/pmndrs/postprocessing/wiki) is highly recommended to understand how the `EffectComposer` works.
 
 The returned object can have the following options:
 - `passes` (required): array of fragment shader strings (adjacent strings will be incorporated into one `EffectPass`) or valid instances of a postprocessing `Pass` that will be used in `EffectComposer`.
@@ -130,7 +130,7 @@ module.exports = () => {
 The `x` and `y` values are similar to `uv.x` and `uv.y` used in shaders, in that they both range from 0 to 1 and represent the location of the mouse event by percentage of the terminal screen. So a click at [x=0, y=0] would represent the bottom left corner of the screen and a click at [x=1, y=1] would represent the top right corner. Theoretically you can duplicate any `uv` transformations made in shaders and use them in this callback to fix any mouse-visual problems.
 
 ### Quick start
-`postprocessing` already provides a number of effects out of the box ([demo](https://vanruesc.github.io/postprocessing/public/demo/#bloom)). You can use [examples/quick-start.js](examples/quick-start.js) as a starting point to build your own effect, or see one of the [example effects](examples/effects) for a more custom approach.
+`postprocessing` already provides a number of effects out of the box ([demo](https://pmndrs.github.io/postprocessing/public/demo/#bloom)). You can use [examples/quick-start.js](examples/quick-start.js) as a starting point to build your own effect, or see one of the [example effects](examples/effects) for a more custom approach.
 
 ## Uniforms
 * `sampler2D inputBuffer` -- the xterm terminal image
@@ -151,7 +151,7 @@ By default this plugin uses `postprocessing` v6.22.5 and its compatible version 
 ```js
 /* path-to-entry-file.js */
 const three = require('three'); // vX.X.X
-const pp = require('postproessing'); // vY.Y.Y
+const pp = require('postprocessing'); // vY.Y.Y
 
 module.exports = () => {
   return {
