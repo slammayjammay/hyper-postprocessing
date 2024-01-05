@@ -27,6 +27,7 @@ class XTermEffect {
 		this.options = options;
 
 		this._onResize = this._onResize.bind(this);
+		this._unResize = null;
 		this._onMouseEvent = this._onMouseEvent.bind(this);
 
 		this._xTermScreen = null; // xterm's container for render layers
@@ -114,7 +115,7 @@ class XTermEffect {
 			}
 		}
 
-		this.xTerm.onResize(this._onResize);
+		this._unResize = this.xTerm.onResize(this._onResize).dispose;
 		this.readDimensions();
 	}
 
@@ -306,7 +307,7 @@ class XTermEffect {
 		this._xTermScreen.style.opacity = this._xTermScreenOpacity;
 		this._xTermScreenOpacity = null;
 
-		this.xTerm.off('resize', this._onResize);
+		this._unResize();
 
 		for (const eventType of this.getMouseEvents()) {
 			this._xTermScreen.removeEventListener(eventType, this._onMouseEvent);
@@ -333,6 +334,7 @@ class XTermEffect {
 		this.canvas = null;
 		this.clock = this.scene = this.renderer = this.camera = this.composer = null;
 		this._xTermScreen = null;
+		this._unResize = null;
 	}
 }
 
